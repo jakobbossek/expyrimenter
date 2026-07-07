@@ -8,20 +8,40 @@ from Experiments.Job import Job
 from Experiments.Backend import JoblibBackend
 
 class Registry:
+    """
+    Represents an experimental registry.
+
+    Attributes:
+        path (str): Path to registry folder in the file system.
+        overwrite (bool): Shall the registry folder be overwriten if it already exists?
+        locked (bool): Is a design already loaded? I.e., does the registry already contain jobs?
+        job_collection (list[Job]): List of Jobs. Note that the first element is a dummy (always 'None') since jobs are numbered with natural numbers.
+        n (int): Number of jobs.
+        design_path (str): path to experimental design file in the registry.
+        backend (ParallelBackend): Instance of a parallelisation backend. Default is an instance of the JoblibBackend.
+    """
 
     def __init__(self, path: str, overwrite: bool = False, backend = None):
-        self.path = path
-        self.overwrite = overwrite
+        """
+        Initialise an experimental registry.
+
+        Args:
+            path (str): Path to registry folder in the file system.
+            overwrite (bool): Shall the registry folder be overwriten if it already exists? Default is False.
+            backend (ParallelBackend): Instance of a parallelisation backend. Default is an instance of the JoblibBackend.
+        """
+        self.path: str = path
+        self.overwrite: bool = overwrite
 
         # was a design already loaded?
-        self.locked = False
+        self.locked: bool = False
 
         # list of jobs
-        self.job_collection = [None] # dummy at position 0
-        self.n = 0
+        self.job_collection: list[int] = [None] # dummy at position 0
+        self.n: int = 0
 
         # path to design in registry
-        self.design_path = os.path.join(path, "design.csv")
+        self.design_path: str = os.path.join(path, "design.csv")
 
         # parallelisation backend
         self.backend = backend if backend is not None else JoblibBackend()
@@ -45,12 +65,27 @@ class Registry:
             print(f"An error occurred in initialiser: {e}")
 
 
-    def set_backend(self, backend):
+    def set_backend(self, backend) -> None:
+        """
+        Set parallelisation backend.
+
+        Args:
+            backend (ParallelBackend): Instance of a sub-class of 'ParallelBackend'.
+        """
         self.backend = backend
 
 
     @staticmethod
-    def load(path):
+    def load(path: str):
+        """
+        Load registry from file system.
+
+        Args:
+            path (str): Path to registry folder in the file system.
+
+        Returns:
+            A registry object.
+        """
         reg = Registry(path, overwrite = False)
 
         #  TODO: this is copy and paste
@@ -82,14 +117,14 @@ class Registry:
         return reg
 
 
-    def load_design(self, path):
-        '''
+    def load_design(self, path) -> None:
+        """
         Read setup parameters from file.
 
         job_id is the line number. Additionally the first line is read. It contains the
         parameter names. Return value is a dict with the names as keys and the string
         parameters as values.
-        '''
+        """
         if self.locked:
             print(f"Registry is already locked with {len(self.job_collection)} jobs.")
             return
@@ -120,7 +155,8 @@ class Registry:
         except Exception as e:
             print(f"An error occurred: {e}")
 
-    def size(self):
+
+    def size(self) -> int:
         """
         Return the number of jobs.
 
@@ -129,38 +165,104 @@ class Registry:
         """
         return self.n
 
-    def _get_all_jobids(self):
+
+    def _get_all_jobids(self) -> list[int]:
+        """
+        Return a generator of all job ids.
+        """
         return range(1, self.n + 1)
 
-    def _get_status(self, jobids: list[int] = None):
+
+    def _get_status(self, jobids: list[int] = None) -> list[str]:
+        """
+        Return list of statuses of jobs.
+
+        Args:
+            jobids (list[int]): list of job IDs. Default is 'None'. In this case all job IDs are considered.
+
+        Returns:
+            A list of strings.
+        """
         if jobids is None:
             jobids = self._get_all_jobids()
 
         return [job.get_status() for job in self.get_jobs(jobids)]
 
-    def _get_by_status(self, predicate = lambda job: True, jobids = None):
+
+    def _get_by_status(self, predicate: Callable[[Job], bool] = lambda job: True, jobids: list[int] = None) -> list[int]:
+        """
+        Calculate job IDs of jobs by status.
+
+        Args:
+            predicate (Callable[[Job], bool]): A function that takes a Job object and returns a Boolean.
+            jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
+
+        Returns:
+            An integer list of job IDs.
+        """
         filtered_jobids = [job.get_id() for job in self.get_jobs() if predicate(job)]
         if jobids is None:
             return filtered_jobids
         return list(set(filtered_jobids) & set(jobids))
 
-    def get_failed(self, jobids: list[int] = None):
+
+    def get_failed(self, jobids: list[int] = None) -> list[int]:
+        """
+        Calculate job IDs of failed jobs.
+
+        Args:
+            jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
+
+        Returns:
+            An integer list of job IDs.
+        """
         return self._get_by_status(lambda job: job.is_failed(), jobids)
 
-    def get_running(self, jobids: list[int] = None):
+
+    def get_running(self, jobids: list[int] = None) -> list[int]:
+        """
+        Calculate job IDs of running jobs.
+
+        Args:
+            jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
+
+        Returns:
+            An integer list of job IDs.
+        """
         return self._get_by_status(lambda job: job.is_running(), jobids)
 
-    def get_done(self, jobids: list[int] = None):
+
+    def get_done(self, jobids: list[int] = None) -> list[int]:
+        """
+        Calculate job IDs of done/finished jobs.
+
+        Args:
+            jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
+
+        Returns:
+            An integer list of job IDs.
+        """
         return self._get_by_status(lambda job: job.is_done(), jobids)
 
-    def get_jobs(self, jobids: list[int] = None):
+
+    def get_jobs(self, jobids: list[int] = None) -> list[Job]:
+        """
+        Return jobs.
+
+        Args:
+            jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
+
+        Returns:
+            A list of Job objects.
+        """
         if jobids is None:
             jobids = self._get_all_jobids()
         return [self.job_collection[jobid] for jobid in jobids]
 
-    def get_job(self, jobid):
+
+    def get_job(self, jobid: int):
         """
-        Return the job with respective ID.
+        Return the job with the respective ID.
 
         Args:
             jobid (int): The ID of the job starting at 1 (not 0).
@@ -172,12 +274,19 @@ class Registry:
         # Job-IDs are 1, 2, 3, ...
         return self.job_collection[jobid]
 
-    def touch(self):
+
+    def touch(self) -> None:
+        """
+        Update job statuses.
+
+        The function goes through all status file and reads the stored status.
+        """
         jobs = self.get_jobs()
         for job in jobs:
             job.read_status()
 
-    def run(self, runner: Callable[[int, dict[any]], bool], jobids: list = None, shuffle: bool = True, rerun: bool = False):
+
+    def run(self, runner: Callable[[int, dict[any]], bool], jobids: list = None, shuffle: bool = True, rerun: bool = False)  -> list[any]:
         """
         Run jobs in parallel.
 
@@ -190,7 +299,6 @@ class Registry:
 
         Returns:
             A list of Boolean values: 'True' if the job finished successfully and 'False' otherwise.
-
         """
         # If no jobs are passed, assume that all jobs are meant
         if jobids is None:
@@ -224,3 +332,5 @@ class Registry:
         # Update statuses
         # ToDo: for some reason they are not overwritten in the runnrer_wrapper!
         self.touch()
+
+        return res
