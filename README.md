@@ -16,6 +16,20 @@ The typical workflow is as follows:
 * **Lightweight:** Focuses on the essential functionality without unnecessary complexity.
 * **Extensible:** Supports multiple parallelization backends. Currently, the library includes an implementation based on the [joblib library](https://pypi.org/project/joblib/), with additional backends easily added.
 
+## Installation
+
+The package is currently under development. At a later stage it will be available via PyPI. For the time being you can install the development version.
+You will need *conda* to get it running easily. On Macs I suggest to use [homebrew 🍺](https://brew.sh) to install *miniconda*
+```bash
+brew install --cask miniconda 
+```
+
+Once done you can proceed. First, clone the repository and navigate into the respective folder in your favourite terminal application. Once there type the following to install and activate the environment:
+```bash
+conda env create -f environment.yml
+conda activate codebase
+```
+
 ## Example
 
 ```python
