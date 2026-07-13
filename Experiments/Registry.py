@@ -257,7 +257,7 @@ class Registry:
         """
         Return a generator of all job ids.
         """
-        return range(1, self.n + 1)
+        return list(range(1, self.n + 1))
 
 
     def _get_status(self, jobids: list[int] = None) -> list[str]:
@@ -373,7 +373,7 @@ class Registry:
             job.read_status()
 
 
-    def run(self, runner: Callable[[int, dict[any]], bool], jobids: list = None, shuffle: bool = True, rerun: bool = False)  -> list[any]:
+    def run(self, runner: Callable[[int, dict[any]], bool], jobids: list = None, shuffle: bool = True, rerun: bool = False, simplify: bool = False)  -> list[any]:
         """
         Run jobs in parallel.
 
@@ -383,9 +383,10 @@ class Registry:
             jobids (list(int)): Optional list of job IDs. If 'None', all job IDs are used.
             shuffle (bool): Shall jobs be shuffled prior to running? Default is 'True'.
             rerun (bool): Shall finished jobs be re-run? Default is 'False', i.e., finished jobs are skipped.
+            simplify (bool): Shall job parameters and results be returned as a single dictionary? Default is False.
 
         Returns:
-            A list of Boolean values: 'True' if the job finished successfully and 'False' otherwise.
+            A 3-tuple (jobid, dictionary of parameters, dictionary of results). Single "merged" dictionary if simplify is True.
         """
         # If no jobs are passed, assume that all jobs are meant
         if jobids is None:
@@ -406,6 +407,7 @@ class Registry:
             try:
                 job.set_running()
                 res = runner(jobid, params)
+                res = (jobid, params, res) if not simplify else {"jobid": jobid} | params | res
                 job.set_done()
                 return res
             except Exception as e:

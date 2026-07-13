@@ -1,85 +1,80 @@
+import random
+import pandas as pd
+
 from Experiments.Registry import Registry
 from Experiments.Backend import *
-import random
-import itertools
 
-def onemax(x: int) -> int:
+# Pseudo-Boolean function OneMax 
+def OneMax(x: list[int]) -> int:
     return sum(x)
 
-def mutate(x: int, p: float) -> list[int]:
+# Pseudo-Boolean function LeadingOnes (short LO) 
+def LO(x: list[int]) -> int:
+    los = 0
+    for i in x:
+        if i == 0:
+            return los
+        los += 1
+    return los
+
+def mutate(x: list[int], p = None) -> list[int]:
+    if not p:
+        p = 1 / len(x)
     y = x[:]
     for i in range(len(x)):
         if random.random() < p:
-            y = 1 - y[i]
+            y[i] = 1 - y[i]
     return y
 
-def ea(fun, n: int, p: float, max_n: int, opt = None) -> None:
-    x: float = random.random()
+def ea(fun, n: int, maxevals: int) -> None:
+    x: list[int] = [random.randint(0, 1) for _ in range(n)]
     fx: int = fun(x)
-    i: int = 1
-    while (i <= max_n and (fx != opt)):
+    nevals: int = 1
+    while (nevals <= maxevals and (fx != n)):
         y = mutate(x)
         fy = fun(y)
-        if fy <= fx:
+        if fy >= fx:
             x, fx = y, fy
-        i += 1
-    return fx
-    
-# def my_runner(jobid, params):
-#     pass
+        nevals += 1
+    return {'fx': fx, 'OPT': fx == n, 'nevals': nevals}
 
-def my_runner(jobid, params):
-    if jobid == 1:
-        raise Exception()
-    #print(f"Running job #{jobid}")
-    return random.uniform(1, 2)
 
-# Registry folder in the file system 
-path = "expyrimenter-registry"
+if __name__ == "__main__":
+    # Registry folder in the file system 
+    path = "expyrimenter-registry"
 
-# Build the registry
-reg = Registry(path = path, overwrite = True)#, backend = MultiprocessingRunnerBackend())
+    # Build the registry
+    reg = Registry(path = path, overwrite = True)#, backend = MultiprocessingRunnerBackend())
 
-# Runner function.
-# Expects the job's ID and a dictionary of parameters.
-def my_runner(jobid, params):
-    # For showcasing we force job 1 to fail
-    print(params)
-    if jobid == 1:
-        raise Exception()
+    # Runner function.
+    # Expects the job's ID and a dictionary of parameters.
+    # Here the parameters are the objective function "fun" (str) and the decision space dimension "n" (int).
+    # Note: jobid is not used here
+    def my_runner(jobid, params):
+        # Determine the target function
+        fun = OneMax if (params["fun"] == "onemax") else LO
+        n = int(params["n"])
+        return ea(fun, n = n, maxevals = 3 * n * n)
 
-    # Some arbitrary result
-    return random.uniform(1, 2)
 
-p = [1, 2, 3]
-c = [4, 5, 6]
-repls = list(range(1, 11))
+    # Add full factorial design (2 x 3 x 10 = 60)
+    fun = ["onemax", "lo"]
+    n = [10, 25, 50]
+    repl = list(range(1, 11))
 
-reg.add_jobs(p = p, c = c, R = repls)
+    reg.add_jobs(fun = fun, n = n, repl = repl)
+    print(f"No. of jobs in registry: {reg.size()}")
 
-# Load the test design
-#reg.load_design("designs/test_design.csv")
+    # Run all jobs and return a "simplified" single dictionary per job
+    # including the jobid, the parameters and the results.
+    res = reg.run(my_runner, simplify = True)
 
-print(f"No. of jobs in registry: {reg.size()}")
-print(reg.get_job(30))
+    # Note that job 1 failed by design
+    print(reg.get_failed())
+    print(reg.get_done())
 
-# Run some jobs
-reg.run(my_runner, jobids = [1, 4, 6])
-
-# Note that job 1 failed by design
-print(reg.get_failed())
-
-# Jobs 4 and 6 finished
-print(reg.get_done())
-
-# Try to run again. Jobs 4 and 6 are already finished and will thus be skipped!
-reg.run(my_runner, jobids = [1, 4, 6])
-print(reg.get_failed())
-print(reg.get_done())
-
-# Force jobs 4 and 6 to re-run
-reg.run(my_runner, jobids = [4, 6, 10], rerun = True)
-print(reg.get_failed())
-print(reg.get_done())
+    print(res)
+    print(pd.DataFrame(res).to_string())
+    print(reg.get_job(1))
 
 
