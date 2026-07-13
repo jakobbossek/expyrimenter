@@ -13,5 +13,5 @@ conda-activate:
 	conda activate codebase
 
 conda-deactivate:
-	conda deactivate && \
+	conda deactivate
 	conda remove -n codebase --all

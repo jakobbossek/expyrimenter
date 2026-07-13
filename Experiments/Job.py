@@ -84,6 +84,9 @@ class Job:
             A dictionary of parameters. The parameter names are the keys while the values are parameters.
         """
         return self.params
+    
+    def get_param_names(self) -> list[str]:
+        return list(self.params.keys())
 
 
     def get_status(self) -> JobStatus:

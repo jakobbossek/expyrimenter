@@ -1,6 +1,7 @@
 import os
 import shutil
 import random
+import itertools
 
 from collections.abc import Callable
 
@@ -23,6 +24,7 @@ class Registry:
 
     # Eaxh registry holds a number of jobs starting at 1, 2, 3, ...
     njobs: int = 0 # the number of jobs
+    max_job_id: int = 1
 
     def __init__(self, path: str, overwrite: bool = False, backend = None):
         """
@@ -42,6 +44,7 @@ class Registry:
         # list of jobs
         self.job_collection: list[int] = [None] # dummy at position 0
         self.n: int = Registry.njobs
+        self.max_job_id = 1
 
         # path to design in registry
         self.design_path: str = os.path.join(path, "design.csv")
@@ -70,7 +73,7 @@ class Registry:
 
     def set_backend(self, backend) -> None:
         """
-        Set parallelisation backend.
+        Set runner backend.
 
         Args:
             backend (RunnerBackend): Instance of a sub-class of 'RunnerBackend'.
@@ -119,12 +122,33 @@ class Registry:
 
         return reg
     
-    def add_jobs(self, jobs: list[str]) -> None:
-        pass
+    def add_jobs(self, **kwargs) -> None:
+        """
+        Adds jobs via a full factorial design.
 
-
-    def add_job(self, job) -> None:
-        pass
+        Args:
+            **kwargs (dict[str, any]): dictionary of keyword arguments.
+        """
+        def to_dict(l):
+            # TODO: aweful implementation
+            d = {}
+            for x in l:
+                d[x[0]] = x[1]
+            return d
+        
+        #print(kwargs)
+        param_values = list(kwargs.values())
+        param_names  = list(kwargs.keys())
+        design = [to_dict(list(zip(param_names, x))) for x in itertools.product(*(param_values))]
+        print(design)
+        for params in design:
+            jobid = self.max_job_id
+            self.job_collection.append(Job(jobid, self.path, params))
+            self.max_job_id += 1
+            self.n += 1
+        
+        # store to file
+        self._write_design()
 
 
     def load_design(self, path) -> None:
@@ -174,6 +198,25 @@ class Registry:
             The number of jobs in the collection.
         """
         return self.n
+    
+    def _write_design(self):
+        if self.n == 0:
+            return
+        
+        with open(self.design_path, 'w') as f:
+            param_names = ["jobid"] + self.job_collection[1].get_param_names()
+            param_names_string = ",".join(param_names)
+            print(param_names_string)
+            f.write(param_names_string + "\n")
+
+            for job in self.get_jobs():
+                param_values = list(job.get_params().values())
+                jobid = job.get_id()
+                row = [jobid] + param_values
+                row = [str(x) for x in row]
+                print(row)
+                row = ",".join(row)
+                f.write(row + "\n")
 
 
     def _get_all_jobids(self) -> list[int]:
