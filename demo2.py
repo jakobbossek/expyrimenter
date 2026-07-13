@@ -38,7 +38,7 @@ def my_runner(jobid, params):
 path = "expyrimenter-registry"
 
 # Build the registry
-reg = Registry(path = path, overwrite = True)#, backend = SequentialRunnerBackend())
+reg = Registry(path = path, overwrite = True)#, backend = MultiprocessingRunnerBackend())
 
 # Runner function.
 # Expects the job's ID and a dictionary of parameters.

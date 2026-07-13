@@ -22,9 +22,8 @@ class Registry:
         backend (RunnerBackend): Instance of a runner backend. Default is an instance of the JoblibRunnerBackend.
     """
 
-    # Eaxh registry holds a number of jobs starting at 1, 2, 3, ...
+    # Each registry holds a number of jobs starting at 1, 2, 3, ...
     njobs: int = 0 # the number of jobs
-    max_job_id: int = 1
 
     def __init__(self, path: str, overwrite: bool = False, backend = None):
         """
@@ -98,16 +97,24 @@ class Registry:
         exp_path = os.path.join(path, "design.csv")
         try:
             with open(exp_path, 'r') as f:
-                lines = [x for _, x in enumerate(f)]
-                lines = [line.strip("\n").split(',') for line in lines]
-                header = lines[0]
-                design = lines[1:]
-                for line in design:
-                    jobid = int(line[0])
-                    params = dict(zip(header, line))
+                # Read all rows
+                rows = [x for _, x in enumerate(f)]
+                
+                # Split by separator
+                rows = [row.strip("\n").split(',') for row in rows]
+
+                # First line contains the 'jobid' + parameter names
+                header = rows[0]
+
+                design = rows[1:]
+                for row in design:
+                    jobid = int(row[0])
+                    params = dict(zip(header, row))
 
                     reg.job_collection.append(Job(jobid, path, params))
                     reg.n += 1
+                    reg.max_job_id += 1
+
 
                 # Lock registry. I.e., no more jobs can be added
                 reg.locked = True
@@ -136,28 +143,38 @@ class Registry:
                 d[x[0]] = x[1]
             return d
         
-        #print(kwargs)
+        # Extract the parameter values
         param_values = list(kwargs.values())
+
+        # Extract the parameter names
         param_names  = list(kwargs.keys())
+
+        # Build the experimental design (a list(dict(param_name, param_value)))
         design = [to_dict(list(zip(param_names, x))) for x in itertools.product(*(param_values))]
-        print(design)
+
+        # Actually add the jobs
         for params in design:
             jobid = self.max_job_id
             self.job_collection.append(Job(jobid, self.path, params))
             self.max_job_id += 1
             self.n += 1
         
-        # store to file
+        # Store the design file
         self._write_design()
 
 
-    def load_design(self, path) -> None:
+    def load_design(self, path: str, sep = ",", finalise = False) -> None:
         """
-        Read setup parameters from file.
+        Read setup parameters from a CSV file.
 
-        job_id is the line number. Additionally the first line is read. It contains the
-        parameter names. Return value is a dict with the names as keys and the string
-        parameters as values.
+        The file-format expected is a comma separated values (CSV). The first is interpreted as the header line
+        with the experimental parameter names.
+        Each following line contains the parameter values for one experiment.
+
+        Args:
+            path (str|path-like): Path to the design file.
+            sep (str): Seperator used in the CSV-file. Default is ','.
+            finalise (bool): Shall the registry be locked after execution? Default is False.
         """
         if self.locked:
             print(f"Registry is already locked with {len(self.job_collection)} jobs.")
@@ -165,23 +182,37 @@ class Registry:
 
         try:
             with open(path, 'r') as f:
-                lines = [x for _, x in enumerate(f)]
-                lines = [line.strip("\n").split(',') for line in lines]
-                header = lines[0]
-                design = lines[1:]
-                for line in design:
-                    jobid = int(line[0])
-                    params = dict(zip(header, line))
-                    #print(params)
+                # Read all rows
+                rows = [x for _, x in enumerate(f)]
+
+                # Explode by seperator
+                rows = [row.strip("\n").split(sep) for row in rows]
+
+                # The first rows entries are interpreted as the parameter names
+                header = rows[0]
+
+                design = rows[1:]
+                for row in design:
+                    # Sequential numbering
+                    jobid = self.max_job_id
+
+                    # Wrap parameter into a dictionary
+                    params = dict(zip(header, row))
+
+                    # Add job 
                     self.job_collection.append(Job(jobid, self.path, params))
+
+                    # ... and ensure consistency
                     self.n += 1
+                    self.max_job_id += 1
 
                 # Lock registry. I.e., no more jobs can be added
-                self.locked = True
-            print("SUCCESS")
+                if finalise:
+                    self.locked = True
 
             # copy design to internals
-            shutil.copyfile(path, self.design_path)
+            self._write_design()
+
         except FileNotFoundError:
             print(f"File '{path}' not found.")
         except PermissionError:
@@ -206,15 +237,18 @@ class Registry:
         with open(self.design_path, 'w') as f:
             param_names = ["jobid"] + self.job_collection[1].get_param_names()
             param_names_string = ",".join(param_names)
-            print(param_names_string)
             f.write(param_names_string + "\n")
 
             for job in self.get_jobs():
+                # Extract the job's parameter values
                 param_values = list(job.get_params().values())
                 jobid = job.get_id()
+
+                # Put into one list
                 row = [jobid] + param_values
                 row = [str(x) for x in row]
-                print(row)
+
+                # Join
                 row = ",".join(row)
                 f.write(row + "\n")
 

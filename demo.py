@@ -51,6 +51,7 @@ def my_runner(jobid, params):
 
 # Load the test design
 reg.load_design("designs/test_design.csv")
+print(reg.n)
 
 print(f"No. of jobs in registry: {reg.size()}")
 print(reg.get_job(400))
@@ -73,5 +74,3 @@ print(reg.get_done())
 reg.run(my_runner, jobids = [4, 6, 10], rerun = True)
 print(reg.get_failed())
 print(reg.get_done())
-
-
