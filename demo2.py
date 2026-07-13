@@ -44,7 +44,7 @@ if __name__ == "__main__":
     path = "expyrimenter-registry"
 
     # Build the registry
-    reg = Registry(path = path, overwrite = True)#, backend = MultiprocessingRunnerBackend())
+    reg = Registry(path = path, overwrite = True, backend = FuturesRunnerBackend())
 
     # Runner function.
     # Expects the job's ID and a dictionary of parameters.
