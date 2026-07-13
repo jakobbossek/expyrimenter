@@ -5,7 +5,7 @@ import random
 from collections.abc import Callable
 
 from Experiments.Job import Job
-from Experiments.Backend import JoblibBackend
+from Experiments.Backend import *
 
 class Registry:
     """
@@ -18,8 +18,11 @@ class Registry:
         job_collection (list[Job]): List of Jobs. Note that the first element is a dummy (always 'None') since jobs are numbered with natural numbers.
         n (int): Number of jobs.
         design_path (str): path to experimental design file in the registry.
-        backend (ParallelBackend): Instance of a parallelisation backend. Default is an instance of the JoblibBackend.
+        backend (RunnerBackend): Instance of a runner backend. Default is an instance of the JoblibRunnerBackend.
     """
+
+    # Eaxh registry holds a number of jobs starting at 1, 2, 3, ...
+    njobs: int = 0 # the number of jobs
 
     def __init__(self, path: str, overwrite: bool = False, backend = None):
         """
@@ -28,7 +31,7 @@ class Registry:
         Args:
             path (str): Path to registry folder in the file system.
             overwrite (bool): Shall the registry folder be overwriten if it already exists? Default is False.
-            backend (ParallelBackend): Instance of a parallelisation backend. Default is an instance of the JoblibBackend.
+            backend (RunnerBackend): Instance of a parallelisation backend. Default is an instance of the JoblibRunnerBackend.
         """
         self.path: str = path
         self.overwrite: bool = overwrite
@@ -38,13 +41,13 @@ class Registry:
 
         # list of jobs
         self.job_collection: list[int] = [None] # dummy at position 0
-        self.n: int = 0
+        self.n: int = Registry.njobs
 
         # path to design in registry
         self.design_path: str = os.path.join(path, "design.csv")
 
         # parallelisation backend
-        self.backend = backend if backend is not None else JoblibBackend()
+        self.backend = backend if backend is not None else JoblibRunnerBackend()
 
         if os.path.exists(path) and os.path.isdir(path) and not overwrite:
             print(f"Path {path} already exists and overwrite = 'False'.")
@@ -70,7 +73,7 @@ class Registry:
         Set parallelisation backend.
 
         Args:
-            backend (ParallelBackend): Instance of a sub-class of 'ParallelBackend'.
+            backend (RunnerBackend): Instance of a sub-class of 'RunnerBackend'.
         """
         self.backend = backend
 
@@ -115,6 +118,13 @@ class Registry:
             print(f"An error occurred: {e}")
 
         return reg
+    
+    def add_jobs(self, jobs: list[str]) -> None:
+        pass
+
+
+    def add_job(self, job) -> None:
+        pass
 
 
     def load_design(self, path) -> None:

@@ -1,6 +1,31 @@
 from Experiments.Registry import Registry
-import os
+from Experiments.Backend import *
 import random
+
+def onemax(x: int) -> int:
+    return sum(x)
+
+def mutate(x: int, p: float) -> list[int]:
+    y = x[:]
+    for i in range(len(x)):
+        if random.random() < p:
+            y = 1 - y[i]
+    return y
+
+def ea(fun, n: int, p: float, max_n: int, opt = None) -> None:
+    x: float = random.random()
+    fx: int = fun(x)
+    i: int = 1
+    while (i <= max_n and (fx != opt)):
+        y = mutate(x)
+        fy = fun(y)
+        if fy <= fx:
+            x, fx = y, fy
+        i += 1
+    return fx
+    
+# def my_runner(jobid, params):
+#     pass
 
 def my_runner(jobid, params):
     if jobid == 1:
@@ -8,19 +33,11 @@ def my_runner(jobid, params):
     #print(f"Running job #{jobid}")
     return random.uniform(1, 2)
 
-# reg = Registry.load(path)
-# print(f"No. of jobs in registry: {reg.size()}")
-
-# print(reg.get_failed())
-# print(reg.get_done())
-
-# exit(0)
-
 # Registry folder in the file system 
 path = "expyrimenter-registry"
 
 # Build the registry
-reg = Registry(path = path, overwrite = True)
+reg = Registry(path = path, overwrite = True)#, backend = SequentialRunnerBackend())
 
 # Runner function.
 # Expects the job's ID and a dictionary of parameters.

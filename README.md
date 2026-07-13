@@ -11,10 +11,12 @@ The typical workflow is as follows:
 5. Monitor job progress from another Python process, including the number of running, completed, and failed jobs.
 6. Collect and analyze the results. For benchmarking optimization algorithms, the library provides built-in utilities for result aggregation.
 
+
 ## Key Features
 
 * **Lightweight:** Focuses on the essential functionality without unnecessary complexity.
 * **Extensible:** Supports multiple parallelization backends. Currently, the library includes an implementation based on the [joblib library](https://pypi.org/project/joblib/), with additional backends easily added.
+
 
 ## Installation
 
@@ -45,8 +47,7 @@ reg = Registry(path = path, overwrite = True)
 
 # Runner function. Expects the job's ID and a dictionary of parameters.
 def my_runner(jobid, params):
-    # For showcasing we force job 1 to fail
-    if jobid == 1:
+# For showcasing we force job 1 to fail if jobid == 1:
         raise Exception()
 
     # Some arbitrary result

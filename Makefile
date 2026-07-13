@@ -9,9 +9,9 @@ flake8:
 	flake8
 
 conda-activate:
-	conda env create -f environment.yml
+	conda env create -f environment.yml && \
 	conda activate codebase
 
 conda-deactivate:
-	conda deactivate
+	conda deactivate && \
 	conda remove -n codebase --all
