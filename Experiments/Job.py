@@ -37,7 +37,7 @@ class Job:
             params = {}
         self.params = params
 
-        self.status = JobStatus.INITIALISED
+        self.status = status
 
         self.output_path = os.path.join(path, "experiments", str(id))
         self.status_path = os.path.join(path, "experiments", str(id), "status.txt")
@@ -85,7 +85,14 @@ class Job:
         """
         return self.params
     
+
     def get_param_names(self) -> list[str]:
+        """
+        Return the names of the parameters.
+        
+        Returns:
+            List of strings.
+        """
         return list(self.params.keys())
 
 
@@ -191,6 +198,7 @@ class Job:
 
         with open(self.log_path, "w") as file:
             traceback.print_exc(file = file)
+
 
     def __str__(self) -> str:
         """

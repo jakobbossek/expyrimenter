@@ -22,9 +22,6 @@ class Registry:
         backend (RunnerBackend): Instance of a runner backend. Default is an instance of the JoblibRunnerBackend.
     """
 
-    # Each registry holds a number of jobs starting at 1, 2, 3, ...
-    njobs: int = 0 # the number of jobs
-
     def __init__(self, path: str, overwrite: bool = False, backend = None):
         """
         Initialise an experimental registry.
@@ -41,8 +38,8 @@ class Registry:
         self.locked: bool = False
 
         # list of jobs
-        self.job_collection: list[int] = [None] # dummy at position 0
-        self.n: int = Registry.njobs
+        self.job_collection: list[Job] = [None] # dummy at position 0
+        self.n: int = 0
         self.max_job_id = 1
 
         # path to design in registry
@@ -52,12 +49,12 @@ class Registry:
         self.backend = backend if backend is not None else JoblibRunnerBackend()
 
         if os.path.exists(path) and os.path.isdir(path) and not overwrite:
-            print(f"Path {path} already exists and overwrite = 'False'.")
+            print(f"Path '{path}' already exists and overwrite = 'False'.")
             return
 
         if os.path.exists(path) and overwrite:
             shutil.rmtree(path, ignore_errors = False)
-            print(f"Deleted registry dir: '{self.path}'")
+            print(f"Deleted registry dir: '{path}'")
 
         # create directory
         try:
@@ -115,7 +112,6 @@ class Registry:
                     reg.n += 1
                     reg.max_job_id += 1
 
-
                 # Lock registry. I.e., no more jobs can be added
                 reg.locked = True
             reg.touch()
@@ -129,6 +125,7 @@ class Registry:
 
         return reg
     
+
     def add_jobs(self, **kwargs) -> None:
         """
         Adds jobs via a full factorial design.
@@ -230,7 +227,8 @@ class Registry:
         """
         return self.n
     
-    def _write_design(self):
+    
+    def _write_design(self) -> None:
         if self.n == 0:
             return
         
@@ -276,7 +274,7 @@ class Registry:
         return [job.get_status() for job in self.get_jobs(jobids)]
 
 
-    def _get_by_status(self, predicate: Callable[[Job], bool] = lambda job: True, jobids: list[int] = None) -> list[int]:
+    def _get_by_status(self, predicate: Callable[[Job], bool] = lambda _: True, jobids: list[int] = None) -> list[int]:
         """
         Calculate job IDs of jobs by status.
 
