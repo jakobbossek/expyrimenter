@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     # Load the test design
     reg.load_design("designs/test_design.csv")
-    print(reg.n)
+    print(reg.size())
 
     print(f"No. of jobs in registry: {reg.size()}")
     print(reg.get_job(400))

@@ -65,7 +65,6 @@ class JoblibRunnerBackend(RunnerBackend):
         """
         return Parallel(n_jobs = self.ncores)(delayed(runner)(jobid) for jobid in jobids)
 
-
 class MultiprocessingRunnerBackend(RunnerBackend):
     """
     Parallelisation backend based on the multiprocessing Python library.
@@ -99,26 +98,23 @@ class MultiprocessingRunnerBackend(RunnerBackend):
         with Pool(self.ncores) as p:
             p.map(runner, jobids)
 
-
-
-
 class FuturesRunnerBackend(RunnerBackend):
     """
     Parallelisation backend based on the concurrent.futures library.
 
     Attributes:
-        ncores (int): Number of cores to use for parallelisation.
+        max_workers (int): Maximum number of workers to use for parallelisation.
     """
 
-    def __init__(self, ncores: int = os.cpu_count() - 1):
+    def __init__(self, max_workers: int = os.cpu_count() - 1):
         """
         Initialise the backend.
 
         Args:
-            ncores (int): ncores (int): Number of cores to use for parallelisation. Defaults to one less than the available number of cores on your machine.
+            max_workers (int): Maximum number of working to use for parallelisation. Defaults to one less than the available number of cores on your machine.
         """
         super().__init__()
-        self.ncores: int = ncores
+        self.max_workers: int = max_workers
 
     def run(self, runner: Callable[[int], any], jobids: list[int]):
         """
@@ -132,7 +128,7 @@ class FuturesRunnerBackend(RunnerBackend):
             A list of whatever the 'runner' function returns.
         """
         # We can use a with statement to ensure threads are cleaned up promptly
-        with concurrent.futures.ThreadPoolExecutor(max_workers = self.ncores) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers = self.max_workers) as executor:
             # Start the load operations and mark each future with its URL
             job_results = {executor.submit(runner, jobid): jobid for jobid in jobids}
             for future in concurrent.futures.as_completed(job_results):

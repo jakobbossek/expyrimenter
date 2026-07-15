@@ -44,6 +44,7 @@ class Job:
         self.log_path    = os.path.join(path, "experiments", str(id), "log.txt")
         self._create_paths()
 
+
     def _create_paths(self) -> None:
         """
         Creates the jobs' files.
@@ -57,6 +58,7 @@ class Job:
             with open(self.log_path, "w") as file:
                 file.write("")
 
+
     def get_outout_path(self) -> str:
         """
         Return the output path.
@@ -65,6 +67,7 @@ class Job:
             File path to the output folder.
         """
         return self.output_path
+
 
     def get_id(self) -> int:
         """
@@ -76,7 +79,7 @@ class Job:
         return self.id
 
 
-    def get_params(self) -> dict:
+    def get_params(self) -> dict[str, any]:
         """
         Return the job's parameters.
 
@@ -188,7 +191,7 @@ class Job:
             self.status = file.read()
 
 
-    def log(self, e: Exception):
+    def log(self, e: Exception) -> None:
         """
         Write to the job's log.
         

@@ -15,38 +15,39 @@ class Registry:
     Attributes:
         path (str): Path to registry folder in the file system.
         overwrite (bool): Shall the registry folder be overwriten if it already exists?
-        locked (bool): Is a design already loaded? I.e., does the registry already contain jobs?
         job_collection (list[Job]): List of Jobs. Note that the first element is a dummy (always 'None') since jobs are numbered with natural numbers.
         n (int): Number of jobs.
+        readonly (bool): Is the registry in read-only mode? In read-only mode jobs cannot be added anymore.
         design_path (str): path to experimental design file in the registry.
         backend (RunnerBackend): Instance of a runner backend. Default is an instance of the JoblibRunnerBackend.
     """
 
-    def __init__(self, path: str, overwrite: bool = False, backend = None):
+    def __init__(self, path: str, overwrite: bool = False, readonly: bool = False, backend: RunnerBackend = None):
         """
         Initialise an experimental registry.
 
         Args:
             path (str): Path to registry folder in the file system.
             overwrite (bool): Shall the registry folder be overwriten if it already exists? Default is False.
-            backend (RunnerBackend): Instance of a parallelisation backend. Default is an instance of the JoblibRunnerBackend.
+            readonly (bool): Is the registry in read-only mode? In read-only mode jobs cannot be added anymore.
+            backend (RunnerBackend): Instance of a runner backend. Default is an instance of the JoblibRunnerBackend.
         """
         self.path: str = path
         self.overwrite: bool = overwrite
 
-        # was a design already loaded?
-        self.locked: bool = False
-
         # list of jobs
         self.job_collection: list[Job] = [None] # dummy at position 0
-        self.n: int = 0
-        self.max_job_id = 1
+        self.njobs: int = 0
+        self.max_job_id: int = 1
 
-        # path to design in registry
+        # Is the registry in read-only mode?
+        self.readonly: bool = readonly
+
+        # Path to design in registry
         self.design_path: str = os.path.join(path, "design.csv")
 
-        # parallelisation backend
-        self.backend = backend if backend is not None else JoblibRunnerBackend()
+        # Parallelisation backend
+        self.backend: RunnerBackend = backend if backend is not None else JoblibRunnerBackend()
 
         if os.path.exists(path) and os.path.isdir(path) and not overwrite:
             print(f"Path '{path}' already exists and overwrite = 'False'.")
@@ -67,7 +68,7 @@ class Registry:
             print(f"An error occurred in initialiser: {e}")
 
 
-    def set_backend(self, backend) -> None:
+    def set_backend(self, backend: RunnerBackend) -> None:
         """
         Set runner backend.
 
@@ -78,17 +79,18 @@ class Registry:
 
 
     @staticmethod
-    def load(path: str):
+    def load(path: str, readonly: bool = True):
         """
         Load registry from file system.
 
         Args:
             path (str): Path to registry folder in the file system.
+            readonly (bool): Load in read-only mode? Default is 'True'.
 
         Returns:
             A registry object.
         """
-        reg = Registry(path, overwrite = False)
+        reg = Registry(path, overwrite = False, readonly = readonly)
 
         #  TODO: this is copy and paste
         exp_path = os.path.join(path, "design.csv")
@@ -109,11 +111,9 @@ class Registry:
                     params = dict(zip(header, row))
 
                     reg.job_collection.append(Job(jobid, path, params))
-                    reg.n += 1
+                    reg.njobs += 1
                     reg.max_job_id += 1
 
-                # Lock registry. I.e., no more jobs can be added
-                reg.locked = True
             reg.touch()
 
         except FileNotFoundError:
@@ -133,6 +133,11 @@ class Registry:
         Args:
             **kwargs (dict[str, any]): dictionary of keyword arguments.
         """
+
+        if self.readonly:
+            print(f"Registry is in 'read-only' mode. Adding jobs is not possible.")
+            return
+
         def to_dict(l):
             # TODO: aweful implementation
             d = {}
@@ -154,13 +159,13 @@ class Registry:
             jobid = self.max_job_id
             self.job_collection.append(Job(jobid, self.path, params))
             self.max_job_id += 1
-            self.n += 1
+            self.njobs += 1
         
         # Store the design file
         self._write_design()
 
 
-    def load_design(self, path: str, sep = ",", finalise = False) -> None:
+    def load_design(self, path: str, sep: str = ",") -> None:
         """
         Read setup parameters from a CSV file.
 
@@ -171,10 +176,10 @@ class Registry:
         Args:
             path (str|path-like): Path to the design file.
             sep (str): Seperator used in the CSV-file. Default is ','.
-            finalise (bool): Shall the registry be locked after execution? Default is False.
         """
-        if self.locked:
-            print(f"Registry is already locked with {len(self.job_collection)} jobs.")
+
+        if self.readonly:
+            print(f"Registry is in 'read-only' mode. Loading design is not possible.")
             return
 
         try:
@@ -200,12 +205,8 @@ class Registry:
                     self.job_collection.append(Job(jobid, self.path, params))
 
                     # ... and ensure consistency
-                    self.n += 1
+                    self.njobs += 1
                     self.max_job_id += 1
-
-                # Lock registry. I.e., no more jobs can be added
-                if finalise:
-                    self.locked = True
 
             # copy design to internals
             self._write_design()
@@ -225,11 +226,11 @@ class Registry:
         Returns:
             The number of jobs in the collection.
         """
-        return self.n
+        return self.njobs
     
-    
+
     def _write_design(self) -> None:
-        if self.n == 0:
+        if self.njobs == 0:
             return
         
         with open(self.design_path, 'w') as f:
@@ -255,7 +256,7 @@ class Registry:
         """
         Return a generator of all job ids.
         """
-        return list(range(1, self.n + 1))
+        return list(range(1, self.njobs + 1))
 
 
     def _get_status(self, jobids: list[int] = None) -> list[str]:
@@ -371,7 +372,12 @@ class Registry:
             job.read_status()
 
 
-    def run(self, runner: Callable[[int, dict[any]], bool], jobids: list = None, shuffle: bool = True, rerun: bool = False, simplify: bool = False)  -> list[any]:
+    def run(self,
+            runner: Callable[[int, dict[any]], bool],
+            jobids: list = None,
+            shuffle: bool = True,
+            rerun: bool = False,
+            simplify: bool = False)  -> tuple[int, dict[str, any], dict[str, any]] | dict[str, any]:
         """
         Run jobs in parallel.
 
@@ -381,10 +387,10 @@ class Registry:
             jobids (list(int)): Optional list of job IDs. If 'None', all job IDs are used.
             shuffle (bool): Shall jobs be shuffled prior to running? Default is 'True'.
             rerun (bool): Shall finished jobs be re-run? Default is 'False', i.e., finished jobs are skipped.
-            simplify (bool): Shall job parameters and results be returned as a single dictionary? Default is False.
+            simplify (bool): Shall job parameters and results be returned as a single dictionary? Default is 'False'.
 
         Returns:
-            A 3-tuple (jobid, dictionary of parameters, dictionary of results). Single "merged" dictionary if simplify is True.
+            A 3-tuple (jobid, dictionary of parameters, dictionary of results) or a single "merged" dictionary if simplify is 'True'.
         """
         # If no jobs are passed, assume that all jobs are meant
         if jobids is None:
@@ -399,7 +405,7 @@ class Registry:
             params = job.get_params()
 
             # Skip jobs if already finished
-            if (job.is_done() and not rerun):
+            if job.is_done() and not rerun:
                 print(f"Skipping job #{jobid} (already finished).")
 
             try:
