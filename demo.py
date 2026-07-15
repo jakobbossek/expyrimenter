@@ -37,6 +37,9 @@ if __name__ == "__main__":
     # Jobs 4 and 6 finished
     print(reg.get_done())
 
+    reg.reset_jobs([4])
+    print(reg.get_done())
+
     # Try to run again. Jobs 4 and 6 are already finished and will thus be skipped!
     reg.run(my_runner, jobids = [1, 4, 6])
     print(reg.get_failed())

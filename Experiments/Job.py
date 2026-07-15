@@ -1,4 +1,5 @@
 import os
+import shutil
 import traceback
 from enum import Enum
 
@@ -39,6 +40,7 @@ class Job:
 
         self.status = status
 
+        self.path = path
         self.output_path = os.path.join(path, "experiments", str(id))
         self.status_path = os.path.join(path, "experiments", str(id), "status.txt")
         self.log_path    = os.path.join(path, "experiments", str(id), "log.txt")
@@ -57,6 +59,22 @@ class Job:
                 file.write(self.status)
             with open(self.log_path, "w") as file:
                 file.write("")
+
+
+    def reset(self) -> None:
+        """
+        Resets the job to the 'initialised' state.
+        """
+        # Remove all stored data
+        shutil.rmtree(self.output_path, ignore_errors = True)
+
+        # Recreate 
+        self._create_paths()
+
+        # Reset status
+        self.set_initialised()
+
+        print(f"Reset job #'{self.id}'")
 
 
     def get_outout_path(self) -> str:
@@ -107,6 +125,13 @@ class Job:
             The job's status.
         """
         return self.status
+
+
+    def set_initialised(self) -> None:
+        """
+        Set job to initialised.
+        """
+        self._update_status(JobStatus.INITIALISED)
 
 
     def set_done(self) -> None:

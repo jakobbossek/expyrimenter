@@ -8,6 +8,7 @@ from collections.abc import Callable
 from Experiments.Job import Job
 from Experiments.Backend import *
 
+
 class Registry:
     """
     Represents an experimental registry.
@@ -123,8 +124,21 @@ class Registry:
         except Exception as e:
             print(f"An error occurred: {e}")
 
-        return reg
+        return reg        
     
+
+    def reset_jobs(self, jobids: list[int]) -> None:
+        """
+        Resets jobs to the 'initialised' state.
+
+        I.e., all results will be deleted.
+
+        Args:
+            jobids (list[int]): A list of integer job IDs.
+        """
+        for jobid in jobids:
+            self.get_job(jobid).reset()
+
 
     def add_jobs(self, **kwargs) -> None:
         """

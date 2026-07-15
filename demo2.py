@@ -60,7 +60,7 @@ if __name__ == "__main__":
     # Add full factorial design (2 x 3 x 10 = 60)
     fun = ["onemax", "lo"]
     n = [10, 25, 50]
-    repl = list(range(1, 11))
+    repl = list(range(1, 101))
 
     reg.add_jobs(fun = fun, n = n, repl = repl)
     print(f"No. of jobs in registry: {reg.size()}")
