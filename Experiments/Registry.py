@@ -414,7 +414,6 @@ class Registry:
             jobids (list(int)): Optional list of job IDs. If 'None', all job IDs are used.
             shuffle (bool): Shall jobs be shuffled prior to running? Default is 'True'.
             rerun (bool): Shall finished jobs be re-run? Default is 'False', i.e., finished jobs are skipped.
-            simplify (bool): Shall job parameters and results be returned as a single dictionary? Default is 'False'.
 
         Returns:
             A 3-tuple (jobid, dictionary of parameters, dictionary of results) or a single "merged" dictionary if simplify is 'True'.
@@ -436,21 +435,44 @@ class Registry:
                 print(f"Skipping job #{jobid} (already finished).")
 
             try:
-                job.set_running()
-                res = runner(jobid, params)
-                res = (jobid, params, res) if not simplify else {"jobid": jobid} | params | res
-                job.set_done()
-                return res
+                result = runner(jobid, params)
+                return ("done", result)
             except Exception as e:
                 print(f"Job #{jobid}: An error occured (see logs for details).")
-                job.log(e)
+                return ("failed", e)
+            
+        # Run using backend
+        results = self.backend.run(runner_wrapper, jobids)
+
+        # NOTE: we need to do this here. Inside the wrapper we have no write-access to the jobs since they are executed in different processes
+        for jobid, (status, value) in zip(jobids, results):
+            job = self.job_collection[jobid]
+            if status == "done":
+                job.set_result(value)
+                job.set_done()
+            else:
+                job.log(value)
                 job.set_failed()
 
-        # Run using backend
-        res = self.backend.run(runner_wrapper, jobids)
+        return self.get_results(jobids, filter_none = False) 
+    
+    def get_results(self,
+                    jobids: list[int],
+                    filter_none: bool = True,
+                    simplify: bool = False) -> list[tuple[int, dict[str, any], dict[str, any]]] | list[dict[str, any]]:
+        """
+        Returns job results.
 
-        # Update statuses
-        # ToDo: for some reason they are not overwritten in the runnrer_wrapper!
-        self.touch()
+        Args:
+            jobids (list[int]): List of integer job IDs, e.g., of finished jobs.
+            filter_none (bool): If 'True' jobs that did not return anything are skipped.
+            simplify (bool): Should the result returned per job be a 3-tuple (jobid, dictionary of parameters, dictionary of results) or a single dictionary? Default is 'False'.
+        
+        Returns:
+            A 3-tuple (jobid, dictionary of parameters, dictionary of results) or a single "merged" dictionary if simplify is 'True'.
+        """
 
-        return res
+        # Filter "None" results or not
+        predicate = lambda job: job.get_result()[2] is not None if filter_none else lambda _: True
+
+        return [job.get_result(simplify) for job in self.get_jobs(jobids) if predicate(job)]

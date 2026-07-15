@@ -67,12 +67,13 @@ if __name__ == "__main__":
 
     # Run all jobs and return a "simplified" single dictionary per job
     # including the jobid, the parameters and the results.
-    res = reg.run(my_runner, simplify = True)
+    reg.run(my_runner, simplify = True)
 
     # Note that job 1 failed by design
     print(reg.get_failed())
     print(reg.get_done())
 
+    res = reg.get_results(jobids = reg.get_done(), simplify = True)
     print(res)
     print(pd.DataFrame(res).to_string())
     print(reg.get_job(1))

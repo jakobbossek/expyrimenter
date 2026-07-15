@@ -35,9 +35,9 @@ def test_registry():
 
     # Run all jobs and return a "simplified" single dictionary per job
     # including the jobid, the parameters and the results.
-    res = reg.run(my_runner, simplify = True, jobids = [1, 4, 6, 10])
-    res = filter(lambda e: e is not None, res)
-    df = pd.DataFrame(res)
+    res = reg.run(my_runner, jobids = [1, 4, 6, 10])
+    df = reg.get_results(jobids = reg.get_done(), simplify = True)
+    df = pd.DataFrame(df)
     assert df.shape[0] == 3 # rows
 
     # Note that job 1 failed by design

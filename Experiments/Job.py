@@ -37,8 +37,8 @@ class Job:
         if params is None:
             params = {}
         self.params = params
-
         self.status = status
+        self.result = None
 
         self.path = path
         self.output_path = os.path.join(path, "experiments", str(id))
@@ -95,6 +95,30 @@ class Job:
             The job ID is returned.
         """
         return self.id
+    
+
+    def get_result(self, simplify: bool = False) -> tuple[int, dict[str, any], dict[str, any]] | dict[str, any]:
+        """
+        Return job result.
+
+        Args:
+            simplify (bool): Should the result be returned as a single dictionary? Default is 'False'.
+
+        Returns:
+            The result of the job either as a 3-tuple (jobid, params, result) or a dictionary (dict[str, any])
+            if simplify is set to 'True'.      
+        """
+        if simplify:
+            return {"jobid": self.get_id()} | self.get_params() | self.result
+
+        return (self.get_id(), self.get_params(), self.result)
+    
+
+    def set_result(self, result: any) -> None:
+        """
+        Set job result.
+        """        
+        self.result = result
 
 
     def get_params(self) -> dict[str, any]:
