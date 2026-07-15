@@ -332,6 +332,19 @@ class Registry:
         return self._get_by_status(lambda job: job.is_running(), jobids)
 
 
+    def get_initialised(self, jobids: list[int] = None) -> list[int]:
+        """
+        Calculate job IDs of initialised jobs.
+
+        Args:
+            jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
+
+        Returns:
+            An integer list of job IDs.
+        """
+        return self._get_by_status(lambda job: job.is_initialised(), jobids)
+    
+
     def get_done(self, jobids: list[int] = None) -> list[int]:
         """
         Calculate job IDs of done/finished jobs.
