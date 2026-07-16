@@ -37,9 +37,11 @@ class Registry:
         self.path: str = path
         self.overwrite: bool = overwrite
 
-        # list of jobs
+        # List of jobs
         self.job_collection: list[Job] = [None] # dummy at position 0
         self.njobs: int = 0
+
+        # Jobs are numbered sequentially starting with 1
         self.max_job_id: int = 1
 
         # Is the registry in read-only mode?
@@ -78,55 +80,7 @@ class Registry:
             backend (RunnerBackend): Instance of a sub-class of 'RunnerBackend'.
         """
         self.backend = backend
-
-
-    @staticmethod
-    def load(path: str, readonly: bool = True):
-        """
-        Load registry from file system.
-
-        Args:
-            path (str): Path to registry folder in the file system.
-            readonly (bool): Load in read-only mode? Default is 'True'.
-
-        Returns:
-            A registry object.
-        """
-        reg = Registry(path, overwrite = False, readonly = readonly)
-
-        #  TODO: this is copy and paste
-        exp_path = os.path.join(path, "design.csv")
-        try:
-            with open(exp_path, 'r') as f:
-                # Read all rows
-                rows = [x for _, x in enumerate(f)]
-                
-                # Split by separator
-                rows = [row.strip("\n").split(',') for row in rows]
-
-                # First line contains the 'jobid' + parameter names
-                header = rows[0]
-
-                design = rows[1:]
-                for row in design:
-                    jobid = int(row[0])
-                    params = dict(zip(header, row))
-
-                    reg.job_collection.append(Job(jobid, path, params))
-                    reg.njobs += 1
-                    reg.max_job_id += 1
-
-            reg.touch()
-
-        except FileNotFoundError:
-            print(f"File '{path}' not found.")
-        except PermissionError:
-            print(f"Permission denied: Unable to read '{path}'.")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-
-        return reg        
-    
+        
 
     def reset_jobs(self, jobids: list[int]) -> None:
         """
@@ -501,3 +455,51 @@ class Registry:
         Return readable string representation.
         """
         return f"[ExPyrimenter registry]\nPath: {self.path}\nMode: {"read-only" if self.readonly else "writable"}\nBackend: {self.backend}\nNo. of jobs: {self.size()}"
+
+
+    @staticmethod
+    def load(path: str, readonly: bool = True):
+        """
+        Load registry from file system.
+
+        Args:
+            path (str): Path to registry folder in the file system.
+            readonly (bool): Load in read-only mode? Default is 'True'.
+
+        Returns:
+            A registry object.
+        """
+        reg = Registry(path, overwrite = False, readonly = readonly)
+
+        #  TODO: this is copy and paste
+        exp_path = os.path.join(path, "design.csv")
+        try:
+            with open(exp_path, 'r') as f:
+                # Read all rows
+                rows = [x for _, x in enumerate(f)]
+                
+                # Split by separator
+                rows = [row.strip("\n").split(',') for row in rows]
+
+                # First line contains the 'jobid' + parameter names
+                header = rows[0]
+
+                design = rows[1:]
+                for row in design:
+                    jobid = int(row[0])
+                    params = dict(zip(header, row))
+
+                    reg.job_collection.append(Job(jobid, path, params))
+                    reg.njobs += 1
+                    reg.max_job_id += 1
+
+            reg.touch()
+
+        except FileNotFoundError:
+            print(f"File '{path}' not found.")
+        except PermissionError:
+            print(f"Permission denied: Unable to read '{path}'.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+        return reg    
