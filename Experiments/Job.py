@@ -1,6 +1,7 @@
 import os
 import shutil
 import traceback
+import pickle
 from enum import Enum
 
 class JobStatus(str, Enum):
@@ -19,6 +20,7 @@ class Job:
         status (str): The job's status. One of 'INITIALISED', 'RUNNING', 'FAILED' or 'DONE'.
         output_path (str): Path to folder where the jobs output and results shall be stored.
         status_path (str): Path to file that stores the status persistently.
+        result_path (str): Path to pickle file that stores the job functions result / return value.
         log_path (str): Path to file that stores the logging.
     """
 
@@ -43,6 +45,7 @@ class Job:
         self.path = path
         self.output_path = os.path.join(path, "experiments", str(id))
         self.status_path = os.path.join(path, "experiments", str(id), "status.txt")
+        self.result_path = os.path.join(path, "experiments", str(id), "result")
         self.log_path    = os.path.join(path, "experiments", str(id), "log.txt")
         self._create_paths()
 
@@ -77,7 +80,7 @@ class Job:
         print(f"Reset job #'{self.id}'")
 
 
-    def get_outout_path(self) -> str:
+    def get_output_path(self) -> str:
         """
         Return the output path.
 
@@ -108,6 +111,13 @@ class Job:
             The result of the job either as a 3-tuple (jobid, params, result) or a dictionary (dict[str, any])
             if simplify is set to 'True'.      
         """
+        if self.result is None and self.status == JobStatus.DONE:
+            try:
+                with open(self.result_path, "rb") as file:
+                    self.result = pickle.load(file)
+            except Exception as e:
+                raise Exception(f"Job #'{self.get_id()}' is 'DONE', but result is unavailable.")       
+
         if simplify:
             return {"jobid": self.get_id()} | self.get_params() | self.result
 
@@ -119,6 +129,8 @@ class Job:
         Set job result.
         """        
         self.result = result
+        with open(self.result_path, "wb") as file:
+            pickle.dump(self.result, file)
 
 
     def get_params(self) -> dict[str, any]:
@@ -235,7 +247,6 @@ class Job:
         """
         Read the job's status from file.
         """
-
         with open(self.status_path, "r") as file:
             self.status = file.read()
 
@@ -247,7 +258,6 @@ class Job:
         Args:
             e (Exception): An exception object. The traceback is written to the job's log-file.
         """
-
         with open(self.log_path, "w") as file:
             traceback.print_exc(file = file)
 

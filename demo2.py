@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     # Run all jobs and return a "simplified" single dictionary per job
     # including the jobid, the parameters and the results.
-    reg.run(my_runner, simplify = True)
+    reg.run(my_runner, batchsize = 50)
 
     # Note that job 1 failed by design
     print(reg.get_failed())

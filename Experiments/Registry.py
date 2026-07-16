@@ -1,4 +1,5 @@
 import os
+import math
 import shutil
 import random
 import itertools
@@ -402,9 +403,9 @@ class Registry:
     def run(self,
             runner: Callable[[int, dict[any]], bool],
             jobids: list = None,
+            batchsize: int = None,
             shuffle: bool = True,
-            rerun: bool = False,
-            simplify: bool = False)  -> tuple[int, dict[str, any], dict[str, any]] | dict[str, any]:
+            rerun: bool = False)  -> tuple[int, dict[str, any], dict[str, any]] | dict[str, any]:
         """
         Run jobs in parallel.
 
@@ -412,6 +413,7 @@ class Registry:
             runner (Callable[[int, dict(str, any), bool]]): the actual runner function. It expects exactly two parameters:
             The job ID as an int and a dictionary of algorithm parameters.
             jobids (list(int)): Optional list of job IDs. If 'None', all job IDs are used.
+            batchsize (int): Size of job batches.
             shuffle (bool): Shall jobs be shuffled prior to running? Default is 'True'.
             rerun (bool): Shall finished jobs be re-run? Default is 'False', i.e., finished jobs are skipped.
 
@@ -421,10 +423,20 @@ class Registry:
         # If no jobs are passed, assume that all jobs are meant
         if jobids is None:
             jobids = self._get_all_jobids()
+        njobs = len(jobids)
 
         # Shuffle jobs
         if shuffle:
             random.shuffle(jobids)
+
+        batches = [jobids]
+
+        if batchsize is None:
+            ncores = os.cpu_count() - 1
+            batchsize = math.ceil(njobs / (3 * ncores))
+        
+        batches = [jobids[i:i+batchsize] for i in range(0, njobs, batchsize)]
+
 
         def runner_wrapper(jobid):
             job = self.get_job(jobid)
@@ -441,18 +453,19 @@ class Registry:
                 print(f"Job #{jobid}: An error occured (see logs for details).")
                 return ("failed", e)
             
-        # Run using backend
-        results = self.backend.run(runner_wrapper, jobids)
+        for batch in batches:
+            # Run using backend
+            results = self.backend.run(runner_wrapper, batch)
 
-        # NOTE: we need to do this here. Inside the wrapper we have no write-access to the jobs since they are executed in different processes
-        for jobid, (status, value) in zip(jobids, results):
-            job = self.job_collection[jobid]
-            if status == "done":
-                job.set_result(value)
-                job.set_done()
-            else:
-                job.log(value)
-                job.set_failed()
+            # NOTE: we need to do this here. Inside the wrapper we have no write-access to the jobs since they are executed in different processes
+            for jobid, (status, value) in zip(batch, results):
+                job = self.job_collection[jobid]
+                if status == "done":
+                    job.set_result(value)
+                    job.set_done()
+                else:
+                    job.log(value)
+                    job.set_failed()
 
         return self.get_results(jobids, filter_none = False) 
     
