@@ -3,6 +3,7 @@ import shutil
 import traceback
 import pickle
 from enum import Enum
+from typing import Self
 
 class JobStatus(str, Enum):
     INITIALISED = "initialised"
@@ -64,7 +65,7 @@ class Job:
                 file.write("")
 
 
-    def reset(self) -> None:
+    def reset(self) -> Self:
         """
         Resets the job to the 'initialised' state.
         """
@@ -78,6 +79,8 @@ class Job:
         self.set_initialised()
 
         print(f"Reset job #'{self.id}'")
+
+        return self
 
 
     def get_output_path(self) -> str:
@@ -124,13 +127,14 @@ class Job:
         return (self.get_id(), self.get_params(), self.result)
     
 
-    def set_result(self, result: any) -> None:
+    def set_result(self, result: any) -> Self:
         """
         Set job result.
         """        
         self.result = result
         with open(self.result_path, "wb") as file:
             pickle.dump(self.result, file)
+        return self
 
 
     def get_params(self) -> dict[str, any]:
@@ -163,32 +167,36 @@ class Job:
         return self.status
 
 
-    def set_initialised(self) -> None:
+    def set_initialised(self) -> Self:
         """
         Set job to initialised.
         """
         self._update_status(JobStatus.INITIALISED)
+        return self
 
 
-    def set_done(self) -> None:
+    def set_done(self) -> Self:
         """
         Set job to finished/done.
         """
         self._update_status(JobStatus.DONE)
+        return self
 
 
-    def set_running(self) -> None:
+    def set_running(self) -> Self:
         """
         Set job to running.
         """
         self._update_status(JobStatus.RUNNING)
+        return self
 
 
-    def set_failed(self) -> None:
+    def set_failed(self) -> Self:
         """
         Set job to failed.
         """
         self._update_status(JobStatus.FAILED)
+        return self
 
 
     def is_done(self) -> bool:
@@ -251,7 +259,7 @@ class Job:
             self.status = file.read()
 
 
-    def log(self, e: Exception) -> None:
+    def log(self, e: Exception) -> Self:
         """
         Write to the job's log.
         
@@ -260,6 +268,7 @@ class Job:
         """
         with open(self.log_path, "w") as file:
             traceback.print_exc(file = file)
+        return self
 
 
     def __str__(self) -> str:

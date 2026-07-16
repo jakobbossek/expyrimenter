@@ -1,10 +1,10 @@
 import os
-import math
 import shutil
 import random
 import itertools
 
 from collections.abc import Callable
+from typing import Self
 
 from Experiments.Job import Job
 from Experiments.Backend import *
@@ -72,7 +72,7 @@ class Registry:
             print(f"An error occurred in initialiser: {e}")
 
 
-    def set_backend(self, backend: RunnerBackend) -> None:
+    def set_backend(self, backend: RunnerBackend) -> Self:
         """
         Set runner backend.
 
@@ -80,9 +80,10 @@ class Registry:
             backend (RunnerBackend): Instance of a sub-class of 'RunnerBackend'.
         """
         self.backend = backend
+        return self
         
 
-    def reset_jobs(self, jobids: list[int]) -> None:
+    def reset_jobs(self, jobids: list[int]) -> Self:
         """
         Resets jobs to the 'initialised' state.
 
@@ -93,9 +94,11 @@ class Registry:
         """
         for jobid in jobids:
             self.get_job(jobid).reset()
+        
+        return self
 
 
-    def add_jobs(self, **kwargs) -> None:
+    def add_jobs(self, **kwargs) -> Self:
         """
         Adds jobs via a full factorial design.
 
@@ -133,8 +136,10 @@ class Registry:
         # Store the design file
         self._write_design()
 
+        return self
 
-    def load_design(self, path: str, sep: str = ",") -> None:
+
+    def load_design(self, path: str, sep: str = ",") -> Self:
         """
         Read setup parameters from a CSV file.
 
@@ -186,6 +191,8 @@ class Registry:
             print(f"Permission denied: Unable to read '{path}'.")
         except Exception as e:
             print(f"An error occurred: {e}")
+
+        return self
 
 
     def size(self) -> int:
@@ -334,7 +341,7 @@ class Registry:
         return [self.job_collection[jobid] for jobid in jobids]
 
 
-    def get_job(self, jobid: int):
+    def get_job(self, jobid: int) -> Job:
         """
         Return the job with the respective ID.
 
@@ -349,7 +356,7 @@ class Registry:
         return self.job_collection[jobid]
 
 
-    def touch(self) -> None:
+    def touch(self) -> Self:
         """
         Update job statuses.
 
@@ -358,6 +365,8 @@ class Registry:
         jobs = self.get_jobs()
         for job in jobs:
             job.read_status()
+        
+        return self
 
 
     def run(self,
@@ -378,7 +387,7 @@ class Registry:
             rerun (bool): Shall finished jobs be re-run? Default is 'False', i.e., finished jobs are skipped.
 
         Returns:
-            A 3-tuple (jobid, dictionary of parameters, dictionary of results) or a single "merged" dictionary if simplify is 'True'.
+            A list of 3-tuples (jobid, dictionary of parameters, dictionary of results).
         """
         # If no jobs are passed, assume that all jobs are meant
         if jobids is None:
@@ -420,11 +429,9 @@ class Registry:
             for jobid, (status, value) in zip(batch, results):
                 job = self.job_collection[jobid]
                 if status == "done":
-                    job.set_result(value)
-                    job.set_done()
+                    job.set_done().set_result(value)
                 else:
-                    job.log(value)
-                    job.set_failed()
+                    job.set_failed().log(value)
 
         return self.get_results(jobids, filter_none = False) 
     
@@ -438,10 +445,10 @@ class Registry:
         Args:
             jobids (list[int]): List of integer job IDs, e.g., of finished jobs.
             filter_none (bool): If 'True' jobs that did not return anything are skipped.
-            simplify (bool): Should the result returned per job be a 3-tuple (jobid, dictionary of parameters, dictionary of results) or a single dictionary? Default is 'False'.
+            simplify (bool): Should the result returned per job be simplified to a single dictionary? Default is 'False'.
         
         Returns:
-            A 3-tuple (jobid, dictionary of parameters, dictionary of results) or a single "merged" dictionary if simplify is 'True'.
+            A list of 3-tuples (jobid, dictionary of parameters, dictionary of results) or a lost of "merged" dictionaries if simplify is 'True'.
         """
 
         # Filter "None" results or not
@@ -502,4 +509,4 @@ class Registry:
         except Exception as e:
             print(f"An error occurred: {e}")
 
-        return reg    
+        return reg
