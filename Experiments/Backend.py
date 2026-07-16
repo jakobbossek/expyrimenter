@@ -33,6 +33,12 @@ class SequentialRunnerBackend(RunnerBackend):
         """
         return [runner(jobid) for jobid in jobids]
 
+    def __str__(self) -> str:
+        """
+        Return readable string representation.
+        """
+        return f"SequentialRunnerBackend()"
+
 class JoblibRunnerBackend(RunnerBackend):
     """
     Parallelisation backend based on the joblib Python library.
@@ -64,6 +70,13 @@ class JoblibRunnerBackend(RunnerBackend):
             A list of whatever the 'runner' function returns.
         """
         return Parallel(n_jobs = self.ncores)(delayed(runner)(jobid) for jobid in jobids)
+
+    def __str__(self) -> str:
+        """
+        Return readable string representation.
+        """
+        return f"JoblibRunnerBackend(ncores = {self.ncores})"
+
 
 class MultiprocessingRunnerBackend(RunnerBackend):
     """
@@ -97,7 +110,7 @@ class MultiprocessingRunnerBackend(RunnerBackend):
         """
         with Pool(self.ncores) as p:
             p.map(runner, jobids)
-
+    
 class FuturesRunnerBackend(RunnerBackend):
     """
     Parallelisation backend based on the concurrent.futures library.

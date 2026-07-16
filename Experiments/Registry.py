@@ -489,3 +489,10 @@ class Registry:
         predicate = lambda job: job.get_result()[2] is not None if filter_none else lambda _: True
 
         return [job.get_result(simplify) for job in self.get_jobs(jobids) if predicate(job)]
+
+
+    def __str__(self) -> str:
+        """
+        Return readable string representation.
+        """
+        return f"[ExPyrimenter registry]\nPath: {self.path}\nMode: {"read-only" if self.readonly else "writable"}\nBackend: {self.backend}\nNo. of jobs: {self.size()}"
