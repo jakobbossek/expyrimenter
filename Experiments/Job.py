@@ -34,6 +34,7 @@ class Job:
             path (int): Path to the job's storage folder.
             params (dict): A dictionary of job parameters.
             status (JobStatus): The job's status. Default is 'initialised'.
+            result (any): The job's result.
         """
         self.id = id
 
@@ -68,6 +69,9 @@ class Job:
     def reset(self) -> Self:
         """
         Resets the job to the 'initialised' state.
+
+        Returns:
+            The callee itself (enables chaining).
         """
         # Remove all stored data
         shutil.rmtree(self.output_path, ignore_errors = True)
@@ -130,6 +134,9 @@ class Job:
     def set_result(self, result: any) -> Self:
         """
         Set job result.
+
+        Returns:
+            The callee itself (enables chaining).
         """        
         self.result = result
         with open(self.result_path, "wb") as file:
@@ -170,6 +177,9 @@ class Job:
     def set_initialised(self) -> Self:
         """
         Set job to initialised.
+
+        Returns:
+            The callee itself (enables chaining).
         """
         self._update_status(JobStatus.INITIALISED)
         return self
@@ -178,6 +188,9 @@ class Job:
     def set_done(self) -> Self:
         """
         Set job to finished/done.
+
+        Returns:
+            The callee itself (enables chaining).
         """
         self._update_status(JobStatus.DONE)
         return self
@@ -186,6 +199,9 @@ class Job:
     def set_running(self) -> Self:
         """
         Set job to running.
+
+        Returns:
+            The callee itself (enables chaining).
         """
         self._update_status(JobStatus.RUNNING)
         return self
@@ -194,6 +210,9 @@ class Job:
     def set_failed(self) -> Self:
         """
         Set job to failed.
+
+        Returns:
+            The callee itself (enables chaining).
         """
         self._update_status(JobStatus.FAILED)
         return self
@@ -265,6 +284,9 @@ class Job:
         
         Args:
             e (Exception): An exception object. The traceback is written to the job's log-file.
+        
+        Returns:
+            The callee itself (enables chaining).
         """
         with open(self.log_path, "w") as file:
             traceback.print_exc(file = file)
@@ -274,5 +296,8 @@ class Job:
     def __str__(self) -> str:
         """
         Represent job as a string.
+
+        Returns:
+            String representation of the object.
         """
         return f"#{self.id} (params: {len(self.params) - 1}, status: '{self.status}')"

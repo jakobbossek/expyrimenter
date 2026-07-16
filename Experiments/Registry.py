@@ -18,7 +18,8 @@ class Registry:
         path (str): Path to registry folder in the file system.
         overwrite (bool): Shall the registry folder be overwriten if it already exists?
         job_collection (list[Job]): List of Jobs. Note that the first element is a dummy (always 'None') since jobs are numbered with natural numbers.
-        n (int): Number of jobs.
+        njobs (int): Number of jobs.
+        max_job_id (int): Highest sequential job number assigned so far.
         readonly (bool): Is the registry in read-only mode? In read-only mode jobs cannot be added anymore.
         design_path (str): path to experimental design file in the registry.
         backend (RunnerBackend): Instance of a runner backend. Default is an instance of the JoblibRunnerBackend.
@@ -78,6 +79,9 @@ class Registry:
 
         Args:
             backend (RunnerBackend): Instance of a sub-class of 'RunnerBackend'.
+
+        Returns:
+            The callee itself (enables chaining).
         """
         self.backend = backend
         return self
@@ -85,12 +89,15 @@ class Registry:
 
     def reset_jobs(self, jobids: list[int]) -> Self:
         """
-        Resets jobs to the 'initialised' state.
+        Resets jobs.
 
-        I.e., all results will be deleted.
+        I.e., all results will be deleted and the job status will be reset to 'initialised'.
 
         Args:
             jobids (list[int]): A list of integer job IDs.
+        
+        Returns:
+            The callee itself (enables chaining).
         """
         for jobid in jobids:
             self.get_job(jobid).reset()
@@ -104,6 +111,8 @@ class Registry:
 
         Args:
             **kwargs (dict[str, any]): dictionary of keyword arguments.
+        Returns:
+            The callee itself (enables chaining).
         """
 
         if self.readonly:
@@ -150,6 +159,9 @@ class Registry:
         Args:
             path (str|path-like): Path to the design file.
             sep (str): Seperator used in the CSV-file. Default is ','.
+
+        Returns:
+            The callee itself (enables chaining).
         """
 
         if self.readonly:
@@ -361,6 +373,9 @@ class Registry:
         Update job statuses.
 
         The function goes through all status file and reads the stored status.
+        
+        Returns:
+            The callee itself (enables chaining).
         """
         jobs = self.get_jobs()
         for job in jobs:
