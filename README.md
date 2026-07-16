@@ -54,12 +54,12 @@ if __name__ == "__main__":
             raise Exception()
 
         # Some arbitrary result
-        return random.uniform(1, 2)
+        return {"result": random.uniform(1, 2)}
 
     # Load the test design
     reg.load_design("designs/test_design.csv")
 
-    print(f"No. of jobs in registry: {reg.size()}")
+    print(reg)
     print(reg.get_job(400))
 
     # Run some jobs
