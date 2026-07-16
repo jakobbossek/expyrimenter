@@ -294,6 +294,9 @@ class Registry:
         """
         Calculate job IDs of jobs by status.
 
+        Note: if the registry is in 'read-only' mode we assume that it is run in a seperate process to monitor running jobs.
+        Thus, in this case the jobs are accessed in the file system before.
+
         Args:
             predicate (Callable[[Job], bool]): A function that takes a Job object and returns a Boolean.
             jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
@@ -301,6 +304,9 @@ class Registry:
         Returns:
             An integer list of job IDs.
         """
+        if self.readonly:
+            self.touch()
+
         filtered_jobids = [job.get_id() for job in self.get_jobs() if predicate(job)]
         if jobids is None:
             return filtered_jobids
@@ -429,11 +435,10 @@ class Registry:
         if shuffle:
             random.shuffle(jobids)
 
-        batches = [jobids]
-
         if batchsize is None:
-            ncores = os.cpu_count() - 1
-            batchsize = math.ceil(njobs / (3 * ncores))
+            # ensure that on single-core systems the value is not zero
+            ncores = max(os.cpu_count() - 1, 1)
+            batchsize = (3 * ncores)
         
         batches = [jobids[i:i+batchsize] for i in range(0, njobs, batchsize)]
 
