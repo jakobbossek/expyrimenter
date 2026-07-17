@@ -36,10 +36,10 @@ if __name__ == "__main__":
     print(reg.get_failed())
     print(reg.get_done())
 
-    # Collect results in a list of 3-tuples (jobid, dict of parameter, dict of results)
+    # Collect results in a list of 3-tuples (jobid, dict of parameters, dict of results)
     res = reg.get_results(jobids = reg.get_done())
     
-    # Collect results in a list of dictionaries ...
+    # Collect results in a list of dicts ...
     res = reg.get_results(jobids = reg.get_done(), simplify = True)
     
     # ... which can be easily transformed into a pandas data frame
