@@ -60,7 +60,7 @@ if __name__ == "__main__":
         return {'result': params["a"] + random.randint(0, 10)}
 
     # Add full factorial design (2 x 3 x 10 = 60)
-    n = [10, 100]
+    a = [10, 100]
     repl = list(range(1, 11)) # each 10 independent runs
 
     # Add full factorial design
