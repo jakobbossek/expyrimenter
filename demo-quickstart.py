@@ -21,7 +21,7 @@ if __name__ == "__main__":
         time.sleep(random.randint(1, 2))
         return {'result': params["a"] + random.randint(0, 10)}
 
-    # Add full factorial design (2 x 3 x 10 = 60)
+    # Add full factorial design (2 x 10 = 20)
     a = [10, 100]
     repl = list(range(1, 11))
 
