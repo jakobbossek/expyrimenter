@@ -385,7 +385,7 @@ class Registry:
         """
         jobs = self.get_jobs()
         for job in jobs:
-            job.read_status()
+            job._load()
         
         return self
 

@@ -46,7 +46,7 @@ class Job:
 
         self.path = path
         self.output_path = os.path.join(path, "experiments", str(id))
-        self.status_path = os.path.join(path, "experiments", str(id), "status.txt")
+        self.pickle_path = os.path.join(path, "experiments", str(id), "job.pkl")
         self.result_path = os.path.join(path, "experiments", str(id), "result")
         self.log_path    = os.path.join(path, "experiments", str(id), "log.txt")
         self._create_paths()
@@ -60,8 +60,6 @@ class Job:
         """
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
-            with open(self.status_path, "w") as file:
-                file.write(self.status)
             with open(self.log_path, "w") as file:
                 file.write("")
 
@@ -266,16 +264,28 @@ class Job:
             status (JobStatus): The new status.
         """
         self.status = status
-        with open(self.status_path, "w") as file:
-            file.write(self.status)
+        self._save()
+        # with open(self.status_path, "w") as file:
+        #     file.write(self.status)
 
 
-    def read_status(self) -> None:
+    def _save(self):
         """
-        Read the job's status from file.
+        Write the pickled job to file.
         """
-        with open(self.status_path, "r") as file:
-            self.status = file.read()
+        with open(self.pickle_path, "wb") as f:
+            pickle.dump(self.__dict__, f)
+    
+
+    def _load(self):
+        """
+        Read the job from pickled file.
+        """
+        try:
+            with open(self.pickle_path, "rb") as f:
+                self.__dict__ = pickle.load(f)
+        except Exception as e:
+            raise Exception(f"Job #'{self.get_id()}' can not be read from file (pickled file does not exist).")  
 
 
     def log(self, e: Exception) -> Self:
