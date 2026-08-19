@@ -382,7 +382,9 @@ class Registry:
             The callee itself (enables chaining).
         """
         for job in self.get_jobs(jobids):
-            print(job.get_log(job))
+            print(f"Log of job {job.get_id()}:")
+            print(f"=====")
+            print(job.get_log())
 
 
     def get_job(self, jobid: int) -> Job:
