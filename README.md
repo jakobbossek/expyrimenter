@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     # Runner function.
     # Expects the job's ID and a dictionary of parameters.
-    # Here there is only one integer parameter n.
+    # Here there is only one integer parameter a (see below).
     # Note: jobid is not used here
     def my_runner(jobid, params):
         # Take a nap for some seconds to simulate expensive jobs
