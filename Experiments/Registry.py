@@ -103,6 +103,20 @@ class Registry:
             self.get_job(jobid).reset()
         
         return self
+    
+    
+    def tag(self, jobids: list[int], tags: list[str]) -> Self:
+        """
+        Append tags to jobs.
+
+        Args:
+            jobids (list[int]): list of job IDs.
+            tags (list[str]): list of tags, i.e., simple strings.
+        Returns:
+            The callee itself (enables chaining).
+        """
+        for job in self.get_jobs(jobids):
+            job.tag(tags)
 
 
     def add_jobs(self, predicate: Callable[[dict[str, any]], bool] = lambda _: True, **kwargs) -> Self:
@@ -344,19 +358,21 @@ class Registry:
         return self._get_by_status(lambda job: job.is_done(), jobids)
 
 
-    def get_jobs(self, jobids: list[int] = None) -> list[Job]:
+    def get_jobs(self, jobids: list[int] = None, tags: list[str] = None) -> list[Job]:
         """
         Return jobs.
 
         Args:
             jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
-
+            tags (list[str]): An optional list of tags. Defaults to no tags at all.
         Returns:
             A list of Job objects.
         """
         if jobids is None:
             jobids = self._get_all_jobids()
-        return [self.job_collection[jobid] for jobid in jobids]
+        if tags is None:
+            tags = []
+        return [self.job_collection[jobid] for jobid in jobids if self.job_collection[jobid].has_tags(tags)]
 
 
     def clear_logs(self, jobids: list[int] = None) -> Self:

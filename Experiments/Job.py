@@ -41,6 +41,7 @@ class Job:
         if params is None:
             params = {}
         self.params = params
+        self.tags = set()
         self.status = status
         self.result = None
 
@@ -70,6 +71,30 @@ class Job:
         """
         with open(self.log_path, "w") as file:
             file.write("")
+
+
+    def tag(self, tags: list[str]) -> Self:
+        """
+        Adds tags to jobs.
+
+        Args:
+            tags (list[str]): list of tags. Each tag is a string.
+        Returns:
+            The callee itself (enables chaining).
+        """
+        self.tags = self.tags.union(set(tags))
+
+    
+    def has_tags(self, tags: list[str]) -> bool:
+        """
+        Check if job contains certain tags.
+
+        Args:
+            tags (list[str]): list of tags. Each tag is a string.
+        Returns:
+            A Boolean that is True if the job has all tags appended and False otherwise.
+        """        
+        return self.tags.issuperset(tags)
 
 
     def reset(self) -> Self:
