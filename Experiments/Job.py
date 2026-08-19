@@ -44,6 +44,7 @@ class Job:
         self.tags = set()
         self.status = status
         self.result = None
+        self.runtime = None
 
         self.path = path
         self.output_path = os.path.join(path, "experiments", str(id))
@@ -112,6 +113,7 @@ class Job:
 
         # Reset status
         self.set_initialised()
+        self.runtime = None
 
         print(f"Reset job #'{self.id}'")
 
@@ -216,14 +218,18 @@ class Job:
         return self
 
 
-    def set_done(self) -> Self:
+    def set_done(self, runtime: float = None) -> Self:
         """
         Set job to finished/done.
 
+        Args:
+            runtime (float | None): Optional runtime of the job. Default is None.
         Returns:
             The callee itself (enables chaining).
         """
         self._update_status(JobStatus.DONE)
+        if runtime is not None:
+            self.runtime = runtime
         return self
 
 

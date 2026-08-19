@@ -2,6 +2,7 @@ import os
 import shutil
 import random
 import itertools
+from timeit import default_timer as timer
 
 from collections.abc import Callable
 from typing import Self
@@ -479,22 +480,27 @@ class Registry:
             if job.is_done() and not rerun:
                 print(f"Skipping job #{jobid} (already finished).")
 
+            time_passed = None
             try:
+                start_time = timer()
                 result = runner(jobid, params)
-                return ("done", result)
+                end_time = timer()
+                time_passed = start_time - end_time
+
+                return ("done", result, time_passed)
             except Exception as e:
                 print(f"Job #{jobid}: An error occured (see logs for details).")
-                return ("failed", e)
+                return ("failed", e, time_passed)
             
         for batch in batches:
             # Run using backend
             results = self.backend.run(runner_wrapper, batch)
 
             # NOTE: we need to do this here. Inside the wrapper we have no write-access to the jobs since they are executed in different processes
-            for jobid, (status, value) in zip(batch, results):
+            for jobid, (status, value, time_passed) in zip(batch, results):
                 job = self.job_collection[jobid]
                 if status == "done":
-                    job.set_done().set_result(value)
+                    job.set_done(time_passed).set_result(value)
                 else:
                     job.set_failed().log(value)
 
