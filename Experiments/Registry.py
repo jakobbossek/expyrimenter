@@ -359,6 +359,32 @@ class Registry:
         return [self.job_collection[jobid] for jobid in jobids]
 
 
+    def clear_logs(self, jobids: list[int] = None) -> Self:
+        """
+        Clears job logs.
+
+        The function goes through all log files and removes all logged tracebacks.
+        
+        Returns:
+            The callee itself (enables chaining).
+        """
+        for job in self.get_jobs(jobids):
+            job.clear_log()
+
+    
+    def show_logs(self, jobids: list[int] = None) -> Self:
+        """
+        Display job logs to stdout.
+
+        The function goes through all log files and prints the content to stdout as a side effect.
+        
+        Returns:
+            The callee itself (enables chaining).
+        """
+        for job in self.get_jobs(jobids):
+            print(job.get_log(job))
+
+
     def get_job(self, jobid: int) -> Job:
         """
         Return the job with the respective ID.
@@ -455,7 +481,8 @@ class Registry:
                     job.set_failed().log(value)
 
         return self.get_results(jobids, filter_none = False) 
-    
+
+
     def get_results(self,
                     jobids: list[int],
                     filter_none: bool = True,

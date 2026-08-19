@@ -64,6 +64,14 @@ class Job:
                 file.write("")
 
 
+    def clear_log(self) -> Self:
+        """
+        Clears the job's log.
+        """
+        with open(self.log_path, "w") as file:
+            file.write("")
+
+
     def reset(self) -> Self:
         """
         Resets the job to the 'initialised' state.
@@ -301,6 +309,19 @@ class Job:
         with open(self.log_path, "w") as file:
             traceback.print_exc(file = file)
         return self
+    
+
+    def get_log(self) -> str:
+        """
+        Read the job's log.
+
+        Returns:
+            The log file content as a single string.
+        """
+        log = ""
+        with open(self.log_path, "r") as file:
+            log = file.read()
+        return log
 
 
     def __str__(self) -> str:
