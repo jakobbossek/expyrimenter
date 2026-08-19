@@ -33,6 +33,17 @@ def test_registry():
     assert reg.size() == njobs_expected
     assert (set(reg.get_initialised()) == set(list(range(1, njobs_expected + 1))))
 
+    # Now exclude some jobs
+    reg = Registry(path = path, overwrite = True, backend = SequentialRunnerBackend())
+
+    njobs_expected = len(fun) * (len(n) - 1) * len(repl)
+
+    reg.add_jobs(fun = fun, predicate = lambda params: params["n"] != 25, n = n, repl = repl)
+    print(reg)
+    assert reg.size() == njobs_expected
+    assert (set(reg.get_initialised()) == set(list(range(1, njobs_expected + 1))))
+
+
     # Run all jobs and return a "simplified" single dictionary per job
     # including the jobid, the parameters and the results.
     res = reg.run(my_runner, jobids = [1, 4, 6, 10])

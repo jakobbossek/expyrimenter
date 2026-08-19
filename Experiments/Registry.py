@@ -105,12 +105,15 @@ class Registry:
         return self
 
 
-    def add_jobs(self, **kwargs) -> Self:
+    def add_jobs(self, predicate: Callable[[dict[str, any]], bool] = lambda _: True, **kwargs) -> Self:
         """
         Adds jobs via a full factorial design.
+        Optionally, arbitrary configuration can be excluded via a filter function.
 
         Args:
             **kwargs (dict[str, any]): dictionary of keyword arguments.
+            predicate (Callable[[dict[str, any]], bool]): allows to ignore certain parameter configurations.
+            Default is to accept any configuration.
         Returns:
             The callee itself (enables chaining).
         """
@@ -137,6 +140,9 @@ class Registry:
 
         # Actually add the jobs
         for params in design:
+            # skip if configuration does not meet requirements
+            if not predicate(params):
+                continue
             jobid = self.max_job_id
             self.job_collection.append(Job(jobid, self.path, params))
             self.max_job_id += 1
