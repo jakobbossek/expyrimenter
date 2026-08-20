@@ -432,7 +432,7 @@ class Registry:
         for job in jobs:
             job._load()
         
-        return self
+        return self        
 
 
     def run(self,
@@ -531,9 +531,33 @@ class Registry:
 
     def __str__(self) -> str:
         """
-        Return readable string representation.
+        Return informal readable string representation.
+
+        Returns:
+            Human-readbale string representation.
         """
-        return f"[ExPyrimenter registry]\nPath: {self.path}\nMode: {"read-only" if self.readonly else "writable"}\nBackend: {self.backend}\nNo. of jobs: {self.size()}"
+        return (
+            "EXPYRIMENTER REGISTRY\n"
+            f"Path: {self.path} ({"read-only" if self.readonly else "writable"})"
+            f"Backend: {self.backend}\n\n"
+            f"STATE OF JOBS\n"
+            f"#total      : {self.size()}\n"
+            f"#initialised: {len(self.get_initialised())}\n"
+            f"#running    : {len(self.get_running())}\n"
+            f"#done       : {len(self.get_done())}\n"
+            f"#failed     : {len(self.get_failed())}"
+        )
+    
+    
+    def __repr__(self) -> str:
+        """
+        Return official string representation, which is aimed at programmers as they develop and maintain a program.
+
+        Returns:
+            Technical string representation.
+        """
+        class_name = type(self).__name__
+        return f"Experiments.{class_name}(path={self.path!r}, read-only={str(self.readonly)!r}, #jobs={str(self.njobs)!r})"
 
 
     @staticmethod
