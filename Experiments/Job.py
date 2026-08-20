@@ -17,15 +17,21 @@ class Job:
 
     Attributes:
         id (int): The job's identifier.
-        params (dict): A dictionary of hyper-parameters for the job.
+        params (dict[str, any]): A dictionary of hyper-parameters for the job.
         status (str): The job's status. One of 'INITIALISED', 'RUNNING', 'FAILED' or 'DONE'.
+        tags (set[str]): A set of tags, i.e., keywords that characterise the job (e.g., 'expensive').
         output_path (str): Path to folder where the jobs output and results shall be stored.
-        status_path (str): Path to file that stores the status persistently.
+        pickle_path (str): Path to file that stores the pickled job persistently.
         result_path (str): Path to pickle file that stores the job functions result / return value.
         log_path (str): Path to file that stores the logging.
     """
 
-    def __init__(self, id: int, path: str, params: dict = None, status: JobStatus = JobStatus.INITIALISED):
+    def __init__(
+            self,
+            id: int,
+            path: str,
+            params: dict[str, any] = None,
+            status: JobStatus = JobStatus.INITIALISED):
         """
         Initialises a job.
 
@@ -92,8 +98,9 @@ class Job:
 
         Args:
             tags (list[str]): list of tags. Each tag is a string.
+
         Returns:
-            A Boolean that is True if the job has all tags appended and False otherwise.
+            A Boolean that is 'True' if the job has all tags appended and 'False' otherwise.
         """        
         return self.tags.issuperset(tags)
 
@@ -140,7 +147,9 @@ class Job:
         return self.id
     
 
-    def get_result(self, simplify: bool = False) -> tuple[int, dict[str, any], dict[str, any]] | dict[str, any]:
+    def get_result(
+            self,
+            simplify: bool = False) -> tuple[int, dict[str, any], dict[str, any]] | dict[str, any]:
         """
         Return job result.
 
@@ -218,7 +227,9 @@ class Job:
         return self
 
 
-    def set_done(self, runtime: float = None) -> Self:
+    def set_done(
+            self,
+            runtime: float = None) -> Self:
         """
         Set job to finished/done.
 
@@ -304,8 +315,6 @@ class Job:
         """
         self.status = status
         self._save()
-        # with open(self.status_path, "w") as file:
-        #     file.write(self.status)
 
 
     def _save(self):
@@ -357,9 +366,20 @@ class Job:
 
     def __str__(self) -> str:
         """
-        Represent job as a string.
+        Return informal readable string representation.
 
         Returns:
-            String representation of the object.
+            Human-readbale string representation.
         """
-        return f"#{self.id} (params: {len(self.params) - 1}, status: '{self.status}')"
+        return f"Job #{self.id} (params: {len(self.params) - 1}, status: '{self.status}')"
+
+
+    def __repr__(self) -> str:
+        """
+        Return official string representation, which is aimed at programmers as they develop and maintain a program.
+
+        Returns:
+            Technical string representation.
+        """
+        class_name = type(self).__name__
+        return f"Experiments.{class_name}(Job ID={self.id!r}, No. of paramaeters={str(len(self.params))!r})"

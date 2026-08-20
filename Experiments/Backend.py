@@ -9,6 +9,25 @@ class RunnerBackend:
     def run(self, runner: Callable[[int], any], jobids: list[int]):
         pass
 
+    def __str__(self) -> str:
+        """
+        Return informal readable string representation.
+
+        Returns:
+            Human-readbale string representation.
+        """
+        return self.__repr__()
+
+    def __repr__(self) -> str:
+        """
+        Return official string representation, which is aimed at programmers as they develop and maintain a program.
+
+        Returns:
+            Technical string representation.
+        """
+        class_name = type(self).__name__
+        return f"Experiments.{class_name}()"
+
 class SequentialRunnerBackend(RunnerBackend):
     """
     Plain sequential execution of jobs.
@@ -20,7 +39,10 @@ class SequentialRunnerBackend(RunnerBackend):
         """
         super().__init__()
 
-    def run(self, runner: Callable[[int], any], jobids: list[int]):
+    def run(
+            self,
+            runner: Callable[[int], any],
+            jobids: list[int]):
         """
         Run experiments in parallel.
 
@@ -33,12 +55,6 @@ class SequentialRunnerBackend(RunnerBackend):
         """
         return [runner(jobid) for jobid in jobids]
 
-    def __str__(self) -> str:
-        """
-        Return readable string representation.
-        """
-        return f"SequentialRunnerBackend()"
-
 class JoblibRunnerBackend(RunnerBackend):
     """
     Parallelisation backend based on the joblib Python library.
@@ -47,7 +63,9 @@ class JoblibRunnerBackend(RunnerBackend):
         ncores (int): Number of cores to use for parallelisation.
     """
 
-    def __init__(self, ncores: int = os.cpu_count() - 1):
+    def __init__(
+            self,
+            ncores: int = os.cpu_count() - 1):
         """
         Initialise the Joblib backend.
 
@@ -58,7 +76,11 @@ class JoblibRunnerBackend(RunnerBackend):
         super().__init__()
         self.ncores: int = ncores
 
-    def run(self, runner: Callable[[int], any], jobids: list[int]):
+
+    def run(
+            self,
+            runner: Callable[[int], any],
+            jobids: list[int]):
         """
         Run experiments in parallel.
 
@@ -70,13 +92,6 @@ class JoblibRunnerBackend(RunnerBackend):
             A list of whatever the 'runner' function returns.
         """
         return Parallel(n_jobs = self.ncores)(delayed(runner)(jobid) for jobid in jobids)
-
-    def __str__(self) -> str:
-        """
-        Return readable string representation.
-        """
-        return f"JoblibRunnerBackend(ncores = {self.ncores})"
-
 
 class MultiprocessingRunnerBackend(RunnerBackend):
     """
@@ -97,7 +112,9 @@ class MultiprocessingRunnerBackend(RunnerBackend):
         super().__init__()
         self.ncores: int = ncores
 
-    def run(self, runner: Callable[[int], any], jobids: list[int]):
+    def run(
+            self,
+            runner: Callable[[int], any], jobids: list[int]):
         """
         Run experiments in parallel.
 
@@ -119,7 +136,9 @@ class FuturesRunnerBackend(RunnerBackend):
         max_workers (int): Maximum number of workers to use for parallelisation.
     """
 
-    def __init__(self, max_workers: int = os.cpu_count() - 1):
+    def __init__(
+            self,
+            max_workers: int = os.cpu_count() - 1):
         """
         Initialise the backend.
 
@@ -129,7 +148,10 @@ class FuturesRunnerBackend(RunnerBackend):
         super().__init__()
         self.max_workers: int = max_workers
 
-    def run(self, runner: Callable[[int], any], jobids: list[int]):
+    def run(
+            self,
+            runner: Callable[[int], any],
+            jobids: list[int]):
         """
         Run experiments in parallel.
 

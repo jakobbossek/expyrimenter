@@ -10,7 +10,6 @@ from typing import Self
 from Experiments.Job import Job
 from Experiments.Backend import *
 
-
 class Registry:
     """
     Represents an experimental registry.
@@ -26,14 +25,19 @@ class Registry:
         backend (RunnerBackend): Instance of a runner backend. Default is an instance of the JoblibRunnerBackend.
     """
 
-    def __init__(self, path: str, overwrite: bool = False, readonly: bool = False, backend: RunnerBackend = None):
+    def __init__(
+            self,
+            path: str,
+            overwrite: bool = False,
+            readonly: bool = False,
+            backend: RunnerBackend = None):
         """
         Initialise an experimental registry.
 
         Args:
             path (str): Path to registry folder in the file system.
-            overwrite (bool): Shall the registry folder be overwriten if it already exists? Default is False.
-            readonly (bool): Is the registry in read-only mode? In read-only mode jobs cannot be added anymore.
+            overwrite (bool): Shall the registry folder be overwriten if it already exists? Default is 'False'.
+            readonly (bool): Is the registry in read-only mode? In read-only mode jobs cannot be added anymore. Default is 'False'.
             backend (RunnerBackend): Instance of a runner backend. Default is an instance of the JoblibRunnerBackend.
         """
         self.path: str = path
@@ -74,7 +78,9 @@ class Registry:
             print(f"An error occurred in initialiser: {e}")
 
 
-    def set_backend(self, backend: RunnerBackend) -> Self:
+    def set_backend(
+            self,
+            backend: RunnerBackend) -> Self:
         """
         Set runner backend.
 
@@ -88,7 +94,9 @@ class Registry:
         return self
         
 
-    def reset_jobs(self, jobids: list[int]) -> Self:
+    def reset_jobs(
+            self,
+            jobids: list[int]) -> Self:
         """
         Resets jobs.
 
@@ -106,7 +114,10 @@ class Registry:
         return self
     
     
-    def tag(self, jobids: list[int], tags: list[str]) -> Self:
+    def tag(
+            self,
+            jobids: list[int],
+            tags: list[str]) -> Self:
         """
         Append tags to jobs.
 
@@ -120,15 +131,21 @@ class Registry:
             job.tag(tags)
 
 
-    def add_jobs(self, predicate: Callable[[dict[str, any]], bool] = lambda _: True, **kwargs) -> Self:
+    def add_jobs(
+            self,
+            predicate: Callable[[dict[str, any]], bool] = lambda _: True,
+            **kwargs) -> Self:
         """
-        Adds jobs via a full factorial design.
-        Optionally, arbitrary configuration can be excluded via a filter function.
+        Adds jobs via a full factorial design by default.
+        Optionally, arbitrary configurations can be excluded via a filter function.
 
         Args:
             **kwargs (dict[str, any]): dictionary of keyword arguments.
-            predicate (Callable[[dict[str, any]], bool]): allows to ignore certain parameter configurations.
+            predicate (Callable[[dict[str, any]], bool]): Optional function that allows to ignore certain 
+            parameter configurations. More precisely, the function is expected to receive a parameter combination as a dict[str, any]
+            and to return a Boolean: 'True' if the parameter combination shall be kept and 'False' if it is meant to be discarded.
             Default is to accept any configuration.
+
         Returns:
             The callee itself (enables chaining).
         """
@@ -169,17 +186,20 @@ class Registry:
         return self
 
 
-    def load_design(self, path: str, sep: str = ",") -> Self:
+    def load_design(
+            self,
+            path: str,
+            sep: str = ",") -> Self:
         """
         Read setup parameters from a CSV file.
 
-        The file-format expected is a comma separated values (CSV). The first is interpreted as the header line
+        The file-format expected is a Comma Separated Values (CSV) file. The first line is interpreted as the header line
         with the experimental parameter names.
         Each following line contains the parameter values for one experiment.
 
         Args:
             path (str|path-like): Path to the design file.
-            sep (str): Seperator used in the CSV-file. Default is ','.
+            sep (str): Seperator used in the CSV-file to separate columns. Default is ','.
 
         Returns:
             The callee itself (enables chaining).
@@ -238,7 +258,13 @@ class Registry:
         return self.njobs
     
 
-    def _write_design(self) -> None:
+    def _write_design(self) -> Self:
+        """
+        Write the experimental design to a CSV file.
+
+        Returns:
+            The callee itself (enables chaining).
+        """
         if self.njobs == 0:
             return
         
@@ -263,17 +289,22 @@ class Registry:
 
     def _get_all_jobids(self) -> list[int]:
         """
-        Return a generator of all job ids.
+        Return a list of all job IDs.
+
+        Returns:
+            List of all integer job IDs.
         """
         return list(range(1, self.njobs + 1))
 
 
-    def _get_status(self, jobids: list[int] = None) -> list[str]:
+    def _get_status(
+            self,
+            jobids: list[int] = None) -> list[str]:
         """
         Return list of statuses of jobs.
 
         Args:
-            jobids (list[int]): list of job IDs. Default is 'None'. In this case all job IDs are considered.
+            jobids (list[int] | None): An optional list of job IDs. If 'None' (the default) all job IDs are used.
 
         Returns:
             A list of strings.
@@ -284,7 +315,10 @@ class Registry:
         return [job.get_status() for job in self.get_jobs(jobids)]
 
 
-    def _get_by_status(self, predicate: Callable[[Job], bool] = lambda _: True, jobids: list[int] = None) -> list[int]:
+    def _get_by_status(
+            self,
+            predicate: Callable[[Job], bool] = lambda _: True,
+            jobids: list[int] = None) -> list[int]:
         """
         Calculate job IDs of jobs by status.
 
@@ -293,7 +327,7 @@ class Registry:
 
         Args:
             predicate (Callable[[Job], bool]): A function that takes a Job object and returns a Boolean.
-            jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
+            jobids (list[int] | None): An optional list of job IDs. If 'None' (the default) all job IDs are used.
 
         Returns:
             An integer list of job IDs.
@@ -307,12 +341,14 @@ class Registry:
         return list(set(filtered_jobids) & set(jobids))
 
 
-    def get_failed(self, jobids: list[int] = None) -> list[int]:
+    def get_failed(
+            self,
+            jobids: list[int] = None) -> list[int]:
         """
         Calculate job IDs of failed jobs.
 
         Args:
-            jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
+            jobids (list[int] | None): An optional list of job IDs. If 'None' (the default) all job IDs are used.
 
         Returns:
             An integer list of job IDs.
@@ -320,12 +356,14 @@ class Registry:
         return self._get_by_status(lambda job: job.is_failed(), jobids)
 
 
-    def get_running(self, jobids: list[int] = None) -> list[int]:
+    def get_running(
+            self,
+            jobids: list[int] = None) -> list[int]:
         """
         Calculate job IDs of running jobs.
 
         Args:
-            jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
+            jobids (list[int] | None): An optional list of job IDs. If 'None' (the default) all job IDs are used.
 
         Returns:
             An integer list of job IDs.
@@ -333,12 +371,14 @@ class Registry:
         return self._get_by_status(lambda job: job.is_running(), jobids)
 
 
-    def get_initialised(self, jobids: list[int] = None) -> list[int]:
+    def get_initialised(
+            self,
+            jobids: list[int] = None) -> list[int]:
         """
         Calculate job IDs of initialised jobs.
 
         Args:
-            jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
+            jobids (list[int] | None): An optional list of job IDs. If 'None' (the default) all job IDs are used.
 
         Returns:
             An integer list of job IDs.
@@ -346,12 +386,14 @@ class Registry:
         return self._get_by_status(lambda job: job.is_initialised(), jobids)
     
 
-    def get_done(self, jobids: list[int] = None) -> list[int]:
+    def get_done(
+            self,
+            jobids: list[int] = None) -> list[int]:
         """
         Calculate job IDs of done/finished jobs.
 
         Args:
-            jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
+            jobids (list[int] | None): An optional list of job IDs. If 'None' (the default) all job IDs are used.
 
         Returns:
             An integer list of job IDs.
@@ -359,12 +401,15 @@ class Registry:
         return self._get_by_status(lambda job: job.is_done(), jobids)
 
 
-    def get_jobs(self, jobids: list[int] = None, tags: list[str] = None) -> list[Job]:
+    def get_jobs(
+            self,
+            jobids: list[int] = None,
+            tags: list[str] = None) -> list[Job]:
         """
         Return jobs.
 
         Args:
-            jobids (list[int]): An optional list of job IDs. Defaults to all job IDs.
+            jobids (list[int] | None): An optional list of job IDs. If 'None' (the default) all job IDs are used.
             tags (list[str]): An optional list of tags. Defaults to no tags at all.
         Returns:
             A list of Job objects.
@@ -376,7 +421,9 @@ class Registry:
         return [self.job_collection[jobid] for jobid in jobids if self.job_collection[jobid].has_tags(tags)]
 
 
-    def clear_logs(self, jobids: list[int] = None) -> Self:
+    def clear_logs(
+            self,
+            jobids: list[int] = None) -> Self:
         """
         Clears job logs.
 
@@ -389,7 +436,9 @@ class Registry:
             job.clear_log()
 
     
-    def show_logs(self, jobids: list[int] = None) -> Self:
+    def show_logs(
+            self,
+            jobids: list[int] = None) -> Self:
         """
         Display job logs to stdout.
 
@@ -404,9 +453,11 @@ class Registry:
             print(job.get_log())
 
 
-    def get_job(self, jobid: int) -> Job:
+    def get_job(
+            self,
+            jobid: int) -> Job:
         """
-        Return the job with the respective ID.
+        Return the job with the respective job ID.
 
         Args:
             jobid (int): The ID of the job starting at 1 (not 0).
@@ -423,34 +474,36 @@ class Registry:
         """
         Update job statuses.
 
-        The function goes through all status file and reads the stored status.
+        The function goes through re-loads all jobs from their pickle files.
+        In particular the job status is loaded.
         
         Returns:
             The callee itself (enables chaining).
         """
-        jobs = self.get_jobs()
-        for job in jobs:
+        for job in self.get_jobs():
             job._load()
         
-        return self        
+        return self
 
 
     def run(self,
             runner: Callable[[int, dict[any]], bool],
-            jobids: list = None,
+            jobids: list[int] = None,
             batchsize: int = None,
             shuffle: bool = True,
-            rerun: bool = False)  -> tuple[int, dict[str, any], dict[str, any]] | dict[str, any]:
+            rerun: bool = False)  -> tuple[int, dict[str, any], dict[str, any]]:
         """
         Run jobs in parallel.
 
         Args:
-            runner (Callable[[int, dict(str, any), bool]]): the actual runner function. It expects exactly two parameters:
-            The job ID as an int and a dictionary of algorithm parameters.
-            jobids (list(int)): Optional list of job IDs. If 'None', all job IDs are used.
-            batchsize (int): Size of job batches.
-            shuffle (bool): Shall jobs be shuffled prior to running? Default is 'True'.
-            rerun (bool): Shall finished jobs be re-run? Default is 'False', i.e., finished jobs are skipped.
+            runner (Callable[[int, dict(str, any), bool]]): The actual runner function. It expects exactly two parameters:
+            The integer job ID and a dictionary of algorithm parameters.
+            jobids (list(int)): Optional list of job IDs. If 'None' (the default), all job IDs are used.
+            batchsize (int): Size of job batches. If 'None' (the default) the value is set via a heuristic as follows. The
+            batch size is 3 * max{(no. of cores - 1), 1}. The 'max' function asures that the value is non-zero on single-core machines.
+            shuffle (bool): Shall jobs be shuffled randomly prior to execution? Default is 'True'. Setting this value to 'True' is
+            beneficial if the jobs have very different running times.
+            rerun (bool): Shall already finished jobs be re-run? Default is 'False', i.e., finished jobs are skipped.
 
         Returns:
             A list of 3-tuples (jobid, dictionary of parameters, dictionary of results).
@@ -507,20 +560,22 @@ class Registry:
         return self.get_results(jobids, filter_none = False) 
 
 
-    def get_results(self,
-                    jobids: list[int],
-                    filter_none: bool = True,
-                    simplify: bool = False) -> list[tuple[int, dict[str, any], dict[str, any]]] | list[dict[str, any]]:
+    def get_results(
+            self,
+            jobids: list[int],
+            filter_none: bool = True,
+            simplify: bool = False) -> list[tuple[int, dict[str, any], dict[str, any]]] | list[dict[str, any]]:
         """
-        Returns job results.
+        Return job results.
 
         Args:
             jobids (list[int]): List of integer job IDs, e.g., of finished jobs.
-            filter_none (bool): If 'True' jobs that did not return anything are skipped.
+            filter_none (bool): If 'True' jobs that did not return anything are skipped. Default is 'True'.
             simplify (bool): Should the result returned per job be simplified to a single dictionary? Default is 'False'.
         
         Returns:
-            A list of 3-tuples (jobid, dictionary of parameters, dictionary of results) or a lost of "merged" dictionaries if simplify is 'True'.
+            A list of 3-tuples (jobid, dictionary of parameters, dictionary of results) or a list of "merged" dictionaries if
+            the argument simplify is set to 'True'.
         """
 
         # Filter "None" results or not
@@ -538,8 +593,8 @@ class Registry:
         """
         return (
             "EXPYRIMENTER REGISTRY\n"
-            f"Path: {self.path} ({"read-only" if self.readonly else "writable"})"
-            f"Backend: {self.backend}\n\n"
+            f"Path: {self.path!r} ({"read-only" if self.readonly else "writable"})\n"
+            f"Backend: {self.backend!r}\n\n"
             f"STATE OF JOBS\n"
             f"#total      : {self.size()}\n"
             f"#initialised: {len(self.get_initialised())}\n"
@@ -561,7 +616,9 @@ class Registry:
 
 
     @staticmethod
-    def load(path: str, readonly: bool = True):
+    def load(
+        path: str,
+        readonly: bool = True):
         """
         Load registry from file system.
 
