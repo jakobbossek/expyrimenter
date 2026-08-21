@@ -15,6 +15,13 @@ class Job:
     """
     Represents a job.
 
+    Args:
+        id: The job's identifier (a natural number).
+        path: Path to the job's storage folder.
+        params: A dictionary of job parameters.
+        status: The job's status. Default is 'initialised'.
+        result: The job's result.
+
     Attributes:
         id (int): The job's identifier.
         params (dict[str, any]): A dictionary of hyper-parameters for the job.
@@ -31,17 +38,8 @@ class Job:
             id: int,
             path: str,
             params: dict[str, any] = None,
-            status: JobStatus = JobStatus.INITIALISED):
-        """
-        Initialises a job.
-
-        Args:
-            id (int): The job's identifier (a natural number).
-            path (int): Path to the job's storage folder.
-            params (dict): A dictionary of job parameters.
-            status (JobStatus): The job's status. Default is 'initialised'.
-            result (any): The job's result.
-        """
+            status: JobStatus = JobStatus.INITIALISED
+    ):
         self.id = id
 
         if params is None:
@@ -61,11 +59,7 @@ class Job:
 
 
     def _create_paths(self) -> None:
-        """
-        Creates the jobs' files.
-
-        Internally creates files that store the jobs status and logs.
-        """
+        """Internally creates files that store the jobs status and logs."""
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
             with open(self.log_path, "w") as file:
@@ -73,34 +67,39 @@ class Job:
 
 
     def clear_log(self) -> Self:
-        """
-        Clears the job's log.
-        """
+        """Clears the job's log."""
         with open(self.log_path, "w") as file:
             file.write("")
 
 
-    def tag(self, tags: list[str]) -> Self:
+    def tag(
+            self,
+            tags: list[str]
+    ) -> Self:
         """
         Adds tags to jobs.
 
         Args:
-            tags (list[str]): list of tags. Each tag is a string.
+            tags: list of tags. Each tag is a string.
+
         Returns:
             The callee itself (enables chaining).
         """
         self.tags = self.tags.union(set(tags))
 
     
-    def has_tags(self, tags: list[str]) -> bool:
+    def has_tags(
+            self,
+            tags: list[str]
+    ) -> bool:
         """
         Check if job contains certain tags.
 
         Args:
-            tags (list[str]): list of tags. Each tag is a string.
+            tags: list of tags. Each tag is a string.
 
         Returns:
-            A Boolean that is 'True' if the job has all tags appended and 'False' otherwise.
+            A Boolean that is ``True`` if the job has all tags appended and ``False`` otherwise.
         """        
         return self.tags.issuperset(tags)
 
@@ -149,16 +148,17 @@ class Job:
 
     def get_result(
             self,
-            simplify: bool = False) -> tuple[int, dict[str, any], dict[str, any]] | dict[str, any]:
+            simplify: bool = False
+    ) -> tuple[int, dict[str, any], dict[str, any]] | dict[str, any]:
         """
         Return job result.
 
         Args:
-            simplify (bool): Should the result be returned as a single dictionary? Default is 'False'.
+            simplify: Should the result be returned as a single dictionary? Default is ``False``.
 
         Returns:
             The result of the job either as a 3-tuple (jobid, params, result) or a dictionary (dict[str, any])
-            if simplify is set to 'True'.      
+            if simplify is set to ``True``.      
         """
         if self.result is None and self.status == JobStatus.DONE:
             try:
@@ -173,9 +173,15 @@ class Job:
         return (self.get_id(), self.get_params(), self.result)
     
 
-    def set_result(self, result: any) -> Self:
+    def set_result(
+            self,
+            result: any
+    ) -> Self:
         """
         Set job result.
+
+        Args:
+            result: Whatever the result is.
 
         Returns:
             The callee itself (enables chaining).
@@ -197,22 +203,12 @@ class Job:
     
 
     def get_param_names(self) -> list[str]:
-        """
-        Return the names of the parameters.
-        
-        Returns:
-            List of strings.
-        """
+        """Return list of parameter names."""
         return list(self.params.keys())
 
 
     def get_status(self) -> JobStatus:
-        """
-        Return status.
-
-        Returns:
-            The job's status.
-        """
+        """Return status."""
         return self.status
 
 
@@ -229,12 +225,14 @@ class Job:
 
     def set_done(
             self,
-            runtime: float = None) -> Self:
+            runtime: float | None = None
+    ) -> Self:
         """
-        Set job to finished/done.
+        Set job status to finished/done.
 
         Args:
-            runtime (float | None): Optional runtime of the job. Default is None.
+            runtime: Optional runtime of the job. Default is ``None``.
+
         Returns:
             The callee itself (enables chaining).
         """
@@ -246,7 +244,7 @@ class Job:
 
     def set_running(self) -> Self:
         """
-        Set job to running.
+        Set job status to running.
 
         Returns:
             The callee itself (enables chaining).
@@ -257,7 +255,7 @@ class Job:
 
     def set_failed(self) -> Self:
         """
-        Set job to failed.
+        Set job status to failed.
 
         Returns:
             The callee itself (enables chaining).
@@ -267,68 +265,39 @@ class Job:
 
 
     def is_done(self) -> bool:
-        """
-        Is the job finished/done?
-
-        Returns:
-            Boolean indicating if the job has successfully finished.
-        """
+        """Has the job finished/done?"""
         return self.status == JobStatus.DONE
 
 
     def is_failed(self) -> bool:
-        """
-        Is the job failed?
-
-        Returns:
-            Boolean indicating if the job has failed. See its logs for details in this case.
-        """
+        """Has the job failed?"""
         return self.status == JobStatus.FAILED
 
 
     def is_running(self) -> bool:
-        """
-        Is the job running?
-
-        Returns:
-            Boolean indicating if the job is currently being executed.
-        """
+        """Is the job running?"""
         return self.status == JobStatus.RUNNING
 
 
     def is_initialised(self) -> bool:
-        """
-        Is the job initialised?
-
-        Returns:
-            Boolean indicating if the job has not yet been started.
-        """
+        """Is the job initialised?"""
         return self.status == JobStatus.INITIALISED
 
 
     def _update_status(self, status: JobStatus) -> None:
-        """
-        Update the job's status.
-        
-        Args:
-            status (JobStatus): The new status.
-        """
+        """Update the job's status."""
         self.status = status
         self._save()
 
 
     def _save(self):
-        """
-        Write the pickled job to file.
-        """
+        """Write the pickled job to file."""
         with open(self.pickle_path, "wb") as f:
             pickle.dump(self.__dict__, f)
     
 
     def _load(self):
-        """
-        Read the job from pickled file.
-        """
+        """Read the job from pickled file."""
         try:
             with open(self.pickle_path, "rb") as f:
                 self.__dict__ = pickle.load(f)
@@ -341,7 +310,7 @@ class Job:
         Write to the job's log.
         
         Args:
-            e (Exception): An exception object. The traceback is written to the job's log-file.
+            e: An exception object. The traceback is written to the job's log-file.
         
         Returns:
             The callee itself (enables chaining).
