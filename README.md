@@ -33,15 +33,14 @@ conda activate codebase
 
 ## Quickstart Example
 
-The following code (see 'demo-quickstart.py') is simplified with respect to the jobs internals to showcase the key components if the library. See 'demo-advanced.py' in main repository folder for a more involved example.
+The following code (see 'examples/demo-quickstart.py') is simplified with respect to the jobs internals to showcase the key components of the library. See 'examples/demo-advanced.py' for a more involved example.
 
 ```python
 import random
 import pandas as pd
 import time
 
-from jobkit.Registry import Registry
-from jobkit.Backend import *
+from jobkit import Registry, JoblibRunnerBackend
 
 if __name__ == "__main__":
     # Registry folder in the file system 
