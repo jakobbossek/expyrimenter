@@ -2,6 +2,7 @@ import os
 import shutil
 import traceback
 import pickle
+
 from enum import Enum
 from typing import Self
 
@@ -10,10 +11,12 @@ class JobStatus(str, Enum):
     RUNNING = "running"
     DONE = "done"
     FAILED = "failed"
-
 class Job:
     """
-    Represents a job.
+    A computational job managed by a :class:`Registry`.
+
+    A job encapsulates the information required to execute a
+    computation and stores its execution state and result.
 
     Args:
         id: The job's identifier (a natural number).
@@ -32,7 +35,6 @@ class Job:
         result_path (str): Path to pickle file that stores the job functions result / return value.
         log_path (str): Path to file that stores the logging.
     """
-
     def __init__(
             self,
             id: int,

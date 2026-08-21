@@ -1,9 +1,9 @@
 import random
 import pandas as pd
 import time
+import os
 
-from jobkit.Registry import Registry
-from jobkit.Backend import *
+from jobkit.Registry import Registry, JoblibRunnerBackend
 
 if __name__ == "__main__":
     # Registry folder in the file system 

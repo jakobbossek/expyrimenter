@@ -1,9 +1,8 @@
 import random
 import pandas as pd
-from collections.abc import Callable
+import os
 
-from jobkit.Registry import Registry
-from jobkit.Backend import *
+from jobkit import Registry, JoblibRunnerBackend
 
 # BENCHMARKING STUDY
 # ===

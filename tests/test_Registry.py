@@ -1,5 +1,5 @@
-from jobkit.Registry import Registry
-from jobkit.Backend import SequentialRunnerBackend, JoblibRunnerBackend
+from jobkit import Registry
+from jobkit import SequentialRunnerBackend, JoblibRunnerBackend
 
 import os
 import shutil

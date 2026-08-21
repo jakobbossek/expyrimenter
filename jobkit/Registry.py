@@ -8,7 +8,7 @@ from collections.abc import Callable
 from typing import Self
 
 from jobkit.Job import Job
-from jobkit.Backend import *
+from jobkit.RunnerBackend import *
 
 class Registry:
     """
@@ -35,7 +35,6 @@ class Registry:
         design_path (str): path to experimental design file in the registry.
         backend (RunnerBackend): Instance of a runner backend. Default is an instance of the JoblibRunnerBackend.
     """
-
     def __init__(
             self,
             path: str,
