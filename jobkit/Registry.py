@@ -7,8 +7,8 @@ from timeit import default_timer as timer
 from collections.abc import Callable
 from typing import Self
 
-from Experiments.Job import Job
-from Experiments.Backend import *
+from jobkit.Job import Job
+from jobkit.Backend import *
 
 class Registry:
     """
@@ -592,7 +592,7 @@ class Registry:
             Human-readbale string representation.
         """
         return (
-            "EXPYRIMENTER REGISTRY\n"
+            "JOBKIT REGISTRY\n"
             f"Path: {self.path!r} ({"read-only" if self.readonly else "writable"})\n"
             f"Backend: {self.backend!r}\n\n"
             f"STATE OF JOBS\n"

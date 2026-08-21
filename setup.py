@@ -1,12 +1,12 @@
 import setuptools
 
 setuptools.setup(
-    name = 'expyrimenter',
+    name = 'jobkit',
     version = '1.0.0',
     author = 'Jakob Bossek',
     author_email = 'j.bossek@gmail.com',
     description = 'Easy management of parallel commputing jobs using different parallelisation backends.',
-    url = 'https://github.com/jakobbossek/expyrimenter/',
+    url = 'https://github.com/jakobbossek/jobkit/',
     # tell PyPi that we use markdown and not RestructuredText
     packages = setuptools.find_packages(exclude = ['tests']),
     python_requires = '>=3.12',

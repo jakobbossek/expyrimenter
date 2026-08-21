@@ -2,12 +2,12 @@ import random
 import pandas as pd
 import time
 
-from Experiments.Registry import Registry
-from Experiments.Backend import *
+from jobkit.Registry import Registry
+from jobkit.Backend import *
 
 if __name__ == "__main__":
     # Registry folder in the file system 
-    path = "expyrimenter-registry"
+    path = "jobkit-registry"
 
     # Build the registry
     reg = Registry(path = path, overwrite = True, backend = JoblibRunnerBackend(ncores = os.cpu_count() - 1))

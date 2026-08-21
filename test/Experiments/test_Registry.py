@@ -1,5 +1,5 @@
-from Experiments.Registry import Registry
-from Experiments.Backend import SequentialRunnerBackend, JoblibRunnerBackend
+from jobkit.Registry import Registry
+from jobkit.Backend import SequentialRunnerBackend, JoblibRunnerBackend
 
 import os
 import shutil
@@ -9,7 +9,7 @@ import pandas as pd
 # NOTE: if tests fail use pip install -e . to install the package in 'editable' mode
 
 def test_registry():
-    path = "expyrimenter-unit-test"
+    path = "jobkit-unit-test"
 
     reg = Registry(path = path, overwrite = True, backend = SequentialRunnerBackend())
 

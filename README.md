@@ -1,7 +1,7 @@
-# exPyrimenter
+# jobkit
 
-Do you have many inherently parallel, independent computing jobs as they arise, e.g., in benchmarking of stochastic optimisation algorithms? Then *exPyrimeter* might be worth to consider.
-*exPyrimenter* is a lightweight Python library for **managing and executing parameterisable, inherently parallel computing jobs**.
+Do you have many inherently parallel, independent computing jobs as they arise, e.g., in benchmarking of stochastic optimisation algorithms? Then *jobkit* might be worth to consider.
+*jobkit* is a lightweight Python library for **managing and executing parameterisable, inherently parallel computing jobs**.
 
 The typical workflow is as follows:
 
@@ -40,12 +40,12 @@ import random
 import pandas as pd
 import time
 
-from Experiments.Registry import Registry
-from Experiments.Backend import *
+from jobkit.Registry import Registry
+from jobkit.Backend import *
 
 if __name__ == "__main__":
     # Registry folder in the file system 
-    path = "expyrimenter-registry"
+    path = "jobkit-registry"
 
     # Build the registry
     reg = Registry(path = path, overwrite = True, backend = JoblibRunnerBackend(ncores = os.cpu_count() - 1))
@@ -84,12 +84,12 @@ if __name__ == "__main__":
     print(pd.DataFrame(res).to_string())
 ```
 
-## Contributing to exPyrimenter
+## Contributing to jobkit
 
 If you encounter problems using this software, e.g., bugs or
 insufficient/misleading documentation, or you simply have a question,
 feel free to open an issue in the [issue
-tracker](https://github.com/jakobbossek/expyrimenter/issues). In order to
+tracker](https://github.com/jakobbossek/jobkit/issues). In order to
 reproduce potential problems, please provide a minimal and reproducible
 code example.
 

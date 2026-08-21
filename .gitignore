@@ -1,6 +1,6 @@
 # Project-specific files
 .DS_Store
-expyrimenter-registry/
+jobkit-registry/
 
 
 # Byte-compiled / optimized / DLL files
